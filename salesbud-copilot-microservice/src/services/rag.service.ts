@@ -13,17 +13,51 @@ export interface RagResult {
 @injectable()
 export class RagService {
   private readonly pinecone: Pinecone;
-  private readonly index: ReturnType<Pinecone['Index']>;
+  private index!: ReturnType<Pinecone['Index']>;
   private readonly openai: OpenAI;
+  private indexReady = false;
 
   constructor() {
     this.pinecone = new Pinecone({ apiKey: env.PINECONE_API_KEY });
-    this.index = this.pinecone.Index(env.PINECONE_INDEX);
     this.openai = new OpenAI({
       apiKey: env.OPENROUTER_API_KEY,
       baseURL: 'https://openrouter.ai/api/v1',
     });
     logger.info('Pinecone and OpenRouter initialized');
+  }
+
+  private async ensureIndex(): Promise<void> {
+    if (this.indexReady) return;
+
+    try {
+      await this.pinecone.describeIndex(env.PINECONE_INDEX);
+    } catch (err: any) {
+      if (err?.name === 'PineconeNotFoundError') {
+        logger.info(`Index "${env.PINECONE_INDEX}" not found, creating...`);
+        await this.pinecone.createIndex({
+          name: env.PINECONE_INDEX,
+          dimension: 1536,
+          metric: 'cosine',
+          spec: { serverless: { cloud: 'aws', region: 'us-east-1' } },
+        });
+        logger.info(`Index "${env.PINECONE_INDEX}" created, waiting for ready state...`);
+        await this.waitForIndex();
+      } else {
+        throw err;
+      }
+    }
+
+    this.index = this.pinecone.Index(env.PINECONE_INDEX);
+    this.indexReady = true;
+  }
+
+  private async waitForIndex(): Promise<void> {
+    for (let i = 0; i < 60; i++) {
+      const desc = await this.pinecone.describeIndex(env.PINECONE_INDEX);
+      if (desc.status?.ready) return;
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+    throw new Error(`Index "${env.PINECONE_INDEX}" not ready after 120s`);
   }
 
   async generateEmbedding(text: string): Promise<number[]> {
@@ -40,6 +74,7 @@ export class RagService {
     queryText: string,
     topK = 3,
   ): Promise<RagResult[]> {
+    await this.ensureIndex();
     const embedding = await this.generateEmbedding(queryText);
     const results: RagResult[] = [];
 
@@ -89,6 +124,7 @@ export class RagService {
     text: string,
     metadata: Record<string, any> = {},
   ): Promise<void> {
+    await this.ensureIndex();
     const embedding = await this.generateEmbedding(text);
 
     await this.index.namespace(namespace).upsert({
@@ -105,6 +141,7 @@ export class RagService {
   }
 
   async listDocuments(namespace: string): Promise<{ id: string; text: string; metadata: Record<string, any> }[]> {
+    await this.ensureIndex();
     const ids: string[] = [];
     let paginationToken: string | undefined;
 
@@ -135,11 +172,13 @@ export class RagService {
   }
 
   async deleteDocument(namespace: string, documentId: string): Promise<void> {
+    await this.ensureIndex();
     await this.index.namespace(namespace).deleteOne({ id: documentId });
     logger.info(`Document deleted: ns=${namespace} id=${documentId}`);
   }
 
   async deleteAllDocuments(namespace: string): Promise<void> {
+    await this.ensureIndex();
     await this.index.namespace(namespace).deleteAll();
     logger.info(`All documents deleted: ns=${namespace}`);
   }
