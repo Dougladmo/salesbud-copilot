@@ -14,8 +14,16 @@ export const webhookController = {
     const payload = req.body as EvolutionPayload;
     const { data } = payload;
 
-    if (!data?.key?.remoteJid || data.key.fromMe) {
+    if (!data?.key?.remoteJid) {
       res.json({ status: 'ignored' });
+      return;
+    }
+
+    // When the real seller sends a message, pause the agent for 2 hours
+    if (data.key.fromMe) {
+      const messageBufferService = container.resolve(MessageBufferService);
+      await messageBufferService.pauseAgent(sellerId, data.key.remoteJid);
+      res.json({ status: 'agent_paused' });
       return;
     }
 

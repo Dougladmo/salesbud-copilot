@@ -1,7 +1,7 @@
 import { injectable, inject } from 'tsyringe';
 import { ChatOpenAI, type ChatOpenAIFields } from '@langchain/openai';
-import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages';
-import { createReactAgent } from '@langchain/langgraph/prebuilt';
+import { HumanMessage, AIMessage } from '@langchain/core/messages';
+import { createAgent } from 'langchain';
 import { env } from '../config/env.js';
 import { redis } from '../config/redis.js';
 import { logger } from '../config/logger.js';
@@ -48,7 +48,7 @@ export class AgentService {
       createThinkTool(),
     ];
 
-    const llm = new ChatOpenAI({
+    const model = new ChatOpenAI({
       model: 'deepseek/deepseek-v3.2',
       temperature: 0.7,
       apiKey: env.OPENROUTER_API_KEY,
@@ -57,10 +57,9 @@ export class AgentService {
       },
     } as ChatOpenAIFields);
 
-    const agent = createReactAgent({ llm, tools });
+    const agent = createAgent({ model, tools, systemPrompt });
 
     const messages = [
-      new SystemMessage(systemPrompt),
       ...history,
       new HumanMessage(safeMessage),
     ];

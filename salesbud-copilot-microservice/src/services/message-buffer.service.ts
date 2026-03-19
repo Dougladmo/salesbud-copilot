@@ -7,6 +7,19 @@ import { logger } from '../config/logger.js';
 export class MessageBufferService {
   private readonly timers = new Map<string, NodeJS.Timeout>();
   private readonly defaultTimeout = 5000;
+  private readonly pauseDurationSeconds = 2 * 60 * 60; // 2 hours
+
+  async pauseAgent(sellerId: string, remoteJid: string): Promise<void> {
+    const key = `pause:${sellerId}:${remoteJid}`;
+    await redis.set(key, '1', 'EX', this.pauseDurationSeconds);
+    logger.info(`Agent paused for 2h: seller=${sellerId} jid=${remoteJid}`);
+  }
+
+  async isAgentPaused(sellerId: string, remoteJid: string): Promise<boolean> {
+    const key = `pause:${sellerId}:${remoteJid}`;
+    const paused = await redis.exists(key);
+    return paused === 1;
+  }
 
   async addMessage(
     sellerId: string,

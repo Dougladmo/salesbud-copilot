@@ -21,6 +21,13 @@ export async function handleProcessBuffer(data: unknown): Promise<void> {
   const whatsappService = container.resolve(WhatsappService);
   const ttsService = container.resolve(TtsService);
 
+  const paused = await bufferService.isAgentPaused(sellerId, remoteJid);
+  if (paused) {
+    await bufferService.flushBuffer(sellerId, remoteJid);
+    logger.info(`Agent paused (seller takeover), skipping: seller=${sellerId} jid=${remoteJid}`);
+    return;
+  }
+
   const messages = await bufferService.flushBuffer(sellerId, remoteJid);
   if (!messages.length) {
     logger.warn('Empty buffer, skipping');
@@ -48,12 +55,16 @@ export async function handleProcessBuffer(data: unknown): Promise<void> {
       await whatsappService.sendText(remoteJid, textWithoutUrl);
     }
   } else if (response.length > 500 && seller.voiceId) {
-    const audioBase64 = await ttsService.synthesize(response, seller.voiceId);
+    const cleanResponse = response.replace(/\n---\n/g, '\n\n');
+    const audioBase64 = await ttsService.synthesize(cleanResponse, seller.voiceId);
     await whatsappService.sendAudio(remoteJid, audioBase64);
   } else {
-    const delay = response.length * 50;
-    await new Promise((resolve) => setTimeout(resolve, Math.min(delay, 10000)));
-    await whatsappService.sendText(remoteJid, response);
+    const parts = response.split(/\n---\n/).map((p) => p.trim()).filter(Boolean);
+    for (const part of parts) {
+      const delay = part.length * 50;
+      await new Promise((resolve) => setTimeout(resolve, Math.min(delay, 10000)));
+      await whatsappService.sendText(remoteJid, part);
+    }
   }
 
   logger.info(`Response sent: seller=${sellerId} jid=${remoteJid}`);
