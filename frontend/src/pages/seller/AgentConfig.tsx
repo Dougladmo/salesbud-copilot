@@ -16,12 +16,7 @@ export default function AgentConfig() {
   const [traitCommunication, setTraitCommunication] = useState('direct');
   const [traitEmpathy, setTraitEmpathy] = useState('empathetic');
   const [traitSelling, setTraitSelling] = useState('consultive');
-  const [customPrompt, setCustomPrompt] = useState('');
   const [voiceId, setVoiceId] = useState('');
-  const [timeoutMs, setTimeoutMs] = useState(5000);
-  const [timePerCharMs, setTimePerCharMs] = useState(50);
-  const [maxMemoryMessages, setMaxMemoryMessages] = useState(7);
-  const [audioThreshold, setAudioThreshold] = useState(500);
 
   useEffect(() => {
     if (!seller) return;
@@ -31,12 +26,7 @@ export default function AgentConfig() {
     setTraitCommunication(seller.traitCommunication);
     setTraitEmpathy(seller.traitEmpathy);
     setTraitSelling(seller.traitSelling);
-    setCustomPrompt(seller.customPrompt || '');
     setVoiceId(seller.voiceId || '');
-    setTimeoutMs(seller.timeoutMs);
-    setTimePerCharMs(seller.timePerCharMs);
-    setMaxMemoryMessages(seller.maxMemoryMessages);
-    setAudioThreshold(seller.audioThreshold);
   }, [seller]);
 
   if (!seller) return null;
@@ -53,12 +43,7 @@ export default function AgentConfig() {
         traitCommunication: traitCommunication as 'direct' | 'detailed',
         traitEmpathy: traitEmpathy as 'empathetic' | 'objective',
         traitSelling: traitSelling as 'consultive' | 'aggressive',
-        customPrompt: customPrompt || undefined,
         voiceId: voiceId || undefined,
-        timeoutMs,
-        timePerCharMs,
-        maxMemoryMessages,
-        audioThreshold,
       });
       setStatus({ type: 'success', msg: 'Configurações salvas!' });
       reload();
@@ -136,41 +121,6 @@ export default function AgentConfig() {
                 <option value="consultive">Consultivo</option>
                 <option value="aggressive">Agressivo</option>
               </select>
-            </label>
-          </div>
-        </section>
-
-        {/* Custom Prompt */}
-        <section className="bg-surface border border-border rounded-xl p-5">
-          <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-4">Prompt Customizado</h3>
-          <textarea
-            className={`${inputCls} resize-y`}
-            rows={5}
-            value={customPrompt}
-            onChange={(e) => setCustomPrompt(e.target.value)}
-            placeholder="Adicione instruções extras para o agente (opcional)"
-          />
-        </section>
-
-        {/* Timing */}
-        <section className="bg-surface border border-border rounded-xl p-5">
-          <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-4">Configurações de Timing</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted">
-              Timeout (ms)
-              <input className={inputCls} type="number" min={1000} value={timeoutMs} onChange={(e) => setTimeoutMs(+e.target.value)} />
-            </label>
-            <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted">
-              Tempo/Char (ms)
-              <input className={inputCls} type="number" min={10} value={timePerCharMs} onChange={(e) => setTimePerCharMs(+e.target.value)} />
-            </label>
-            <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted">
-              Máx. Mensagens Memória
-              <input className={inputCls} type="number" min={1} value={maxMemoryMessages} onChange={(e) => setMaxMemoryMessages(+e.target.value)} />
-            </label>
-            <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted">
-              Limiar de Áudio (chars)
-              <input className={inputCls} type="number" min={100} value={audioThreshold} onChange={(e) => setAudioThreshold(+e.target.value)} />
             </label>
           </div>
         </section>
