@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { toast } from 'sonner';
 import { companies, sellers } from '../../api/client';
 import type { DocumentRecord } from '../../api/client';
 import type { Company, Seller } from '../../types';
@@ -12,7 +13,6 @@ export default function Documents() {
   const [targetType, setTargetType] = useState<'company' | 'seller'>('company');
   const [targetId, setTargetId] = useState('');
   const [text, setText] = useState('');
-  const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [documents, setDocuments] = useState<DocumentRecord[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(false);
@@ -56,26 +56,19 @@ export default function Documents() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStatus(null);
     setLoading(true);
     try {
       const result = targetType === 'company'
         ? await companies.uploadDocument(targetId, text)
         : await sellers.uploadDocument(targetId, text);
-      setStatus({
-        type: 'success',
-        message: `Documento enviado! ID: ${result.id} | Namespace: ${result.namespace}`,
-      });
+      toast.success(`Documento enviado! ID: ${result.id} | Namespace: ${result.namespace}`);
       setText('');
       loadDocuments();
       if (targetType === 'seller') {
         sellers.list().then(setSellerList).catch(() => {});
       }
     } catch (err: unknown) {
-      setStatus({
-        type: 'error',
-        message: err instanceof Error ? err.message : 'Erro ao enviar documento',
-      });
+      toast.error(err instanceof Error ? err.message : 'Erro ao enviar documento');
     } finally {
       setLoading(false);
     }
@@ -91,12 +84,9 @@ export default function Documents() {
         await sellers.deleteDocument(targetId, docId);
       }
       setDocuments((prev) => prev.filter((d) => d.id !== docId));
-      setStatus({ type: 'success', message: 'Documento removido com sucesso.' });
+      toast.success('Documento removido com sucesso.');
     } catch (err: unknown) {
-      setStatus({
-        type: 'error',
-        message: err instanceof Error ? err.message : 'Erro ao remover documento',
-      });
+      toast.error(err instanceof Error ? err.message : 'Erro ao remover documento');
     } finally {
       setDeletingId(null);
     }
@@ -111,16 +101,6 @@ export default function Documents() {
         Gerencie os documentos da base de conhecimento de empresas e vendedores. O namespace no Pinecone
         {' '}será criado automaticamente ao enviar o primeiro documento.
       </p>
-
-      {status && (
-        <div className={`px-4 py-3 rounded-lg mb-4 text-sm border ${
-          status.type === 'success'
-            ? 'bg-success/10 border-success text-success'
-            : 'bg-danger/10 border-danger text-danger'
-        }`}>
-          {status.message}
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="bg-surface border border-border rounded-xl p-5 mb-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

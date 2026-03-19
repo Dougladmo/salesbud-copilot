@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 import { sellers, companies } from '../../api/client';
 import { useSeller } from '../../context/SellerContext';
 import type { DocumentRecord } from '../../api/client';
@@ -11,38 +12,114 @@ type Tab = 'config' | 'documents';
 /** Unique key to re-trigger CSS enter animation on tab switch */
 let tabKey = 0;
 
-function StatusBanner({ status, onDismiss }: { status: { type: 'success' | 'error'; msg: string }; onDismiss: () => void }) {
-  const ref = useRef<HTMLDivElement>(null);
+interface TraitOption {
+  value: string;
+  label: string;
+  icon: string;
+  desc: string;
+}
 
-  useEffect(() => {
-    if (status.type === 'success') {
-      const t = setTimeout(onDismiss, 3000);
-      return () => clearTimeout(t);
-    }
-  }, [status, onDismiss]);
+const traitConfig: {
+  key: string;
+  label: string;
+  options: [TraitOption, TraitOption];
+}[] = [
+  {
+    key: 'formality',
+    label: 'Formalidade',
+    options: [
+      { value: 'formal', label: 'Formal', icon: '🎩', desc: 'Tom profissional e sério' },
+      { value: 'informal', label: 'Informal', icon: '😎', desc: 'Tom descontraído e próximo' },
+    ],
+  },
+  {
+    key: 'humor',
+    label: 'Humor',
+    options: [
+      { value: 'humorous', label: 'Humorístico', icon: '😄', desc: 'Usa humor para engajar' },
+      { value: 'serious', label: 'Sério', icon: '📋', desc: 'Direto sem brincadeiras' },
+    ],
+  },
+  {
+    key: 'communication',
+    label: 'Comunicação',
+    options: [
+      { value: 'direct', label: 'Direto', icon: '⚡', desc: 'Respostas curtas e objetivas' },
+      { value: 'detailed', label: 'Detalhado', icon: '📖', desc: 'Explicações completas' },
+    ],
+  },
+  {
+    key: 'empathy',
+    label: 'Empatia',
+    options: [
+      { value: 'empathetic', label: 'Empático', icon: '💛', desc: 'Acolhedor e compreensivo' },
+      { value: 'objective', label: 'Objetivo', icon: '🎯', desc: 'Focado em fatos e dados' },
+    ],
+  },
+  {
+    key: 'selling',
+    label: 'Estilo de Venda',
+    options: [
+      { value: 'consultive', label: 'Consultivo', icon: '🤝', desc: 'Guia o cliente com perguntas' },
+      { value: 'aggressive', label: 'Agressivo', icon: '🚀', desc: 'Foco em fechamento rápido' },
+    ],
+  },
+];
 
+function TraitCard({
+  trait,
+  value,
+  onChange,
+  index,
+}: {
+  trait: (typeof traitConfig)[number];
+  value: string;
+  onChange: (v: string) => void;
+  index: number;
+}) {
   return (
     <div
-      ref={ref}
-      className={`flex items-center justify-between px-4 py-3 rounded-xl mb-5 text-sm border animate-slide-down ${
-        status.type === 'success'
-          ? 'bg-success/10 border-success/30 text-success'
-          : 'bg-danger/10 border-danger/30 text-danger'
-      }`}
+      className="animate-fade-in-up"
+      style={{ animationDelay: `${index * 60}ms` }}
     >
-      <div className="flex items-center gap-2">
-        <span>{status.type === 'success' ? '✓' : '✕'}</span>
-        <span>{status.msg}</span>
+      <p className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">{trait.label}</p>
+      <div className="grid grid-cols-2 gap-2">
+        {trait.options.map((opt) => {
+          const active = value === opt.value;
+          return (
+            <button
+              type="button"
+              key={opt.value}
+              onClick={() => onChange(opt.value)}
+              title={opt.desc}
+              className={`group relative rounded-xl border-2 p-3 text-left transition-all duration-200 cursor-pointer flex flex-col ${
+                active
+                  ? 'border-accent bg-accent/5 shadow-sm shadow-accent/10'
+                  : 'border-border bg-white hover:border-navy/30 hover:shadow-sm'
+              }`}
+            >
+              <span className="text-lg mb-1">{opt.icon}</span>
+              <span
+                className={`text-sm font-semibold transition-colors duration-200 ${
+                  active ? 'text-accent' : 'text-navy group-hover:text-navy-light'
+                }`}
+              >
+                {opt.label}
+              </span>
+              <span className="text-[11px] text-text-muted leading-tight mt-1 line-clamp-1">{opt.desc}</span>
+              {active && (
+                <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-accent animate-pulse" />
+              )}
+            </button>
+          );
+        })}
       </div>
-      <button onClick={onDismiss} className="text-current opacity-50 hover:opacity-100 transition cursor-pointer">
-        ✕
-      </button>
     </div>
   );
 }
 
 export default function Copilot() {
-  const { seller, reload, silentReload } = useSeller();
+  const { seller, silentReload } = useSeller();
   const [tab, setTab] = useState<Tab>('config');
   const [animKey, setAnimKey] = useState(0);
   const [toggling, setToggling] = useState(false);
@@ -52,8 +129,12 @@ export default function Copilot() {
 
   // Config state
   const [saving, setSaving] = useState(false);
-  const [configStatus, setConfigStatus] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
   const [agentName, setAgentName] = useState('');
+  const [traitFormality, setTraitFormality] = useState('informal');
+  const [traitHumor, setTraitHumor] = useState('humorous');
+  const [traitCommunication, setTraitCommunication] = useState('direct');
+  const [traitEmpathy, setTraitEmpathy] = useState('empathetic');
+  const [traitSelling, setTraitSelling] = useState('consultive');
   const [voiceId, setVoiceId] = useState('');
 
   // Documents state
@@ -63,11 +144,31 @@ export default function Copilot() {
   const [loadingDoc, setLoadingDoc] = useState(false);
   const [loadingDocs, setLoadingDocs] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [docStatus, setDocStatus] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+
+  const traitSetters: Record<string, (v: string) => void> = {
+    formality: setTraitFormality,
+    humor: setTraitHumor,
+    communication: setTraitCommunication,
+    empathy: setTraitEmpathy,
+    selling: setTraitSelling,
+  };
+
+  const traitValues: Record<string, string> = {
+    formality: traitFormality,
+    humor: traitHumor,
+    communication: traitCommunication,
+    empathy: traitEmpathy,
+    selling: traitSelling,
+  };
 
   useEffect(() => {
     if (!seller) return;
     setAgentName(seller.agentName);
+    setTraitFormality(seller.traitFormality);
+    setTraitHumor(seller.traitHumor);
+    setTraitCommunication(seller.traitCommunication);
+    setTraitEmpathy(seller.traitEmpathy);
+    setTraitSelling(seller.traitSelling);
     setVoiceId(seller.voiceId || '');
   }, [seller]);
 
@@ -113,16 +214,20 @@ export default function Copilot() {
   const handleSaveConfig = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    setConfigStatus(null);
     try {
       await sellers.update(seller.id, {
         agentName,
+        traitFormality: traitFormality as 'formal' | 'informal',
+        traitHumor: traitHumor as 'humorous' | 'serious',
+        traitCommunication: traitCommunication as 'direct' | 'detailed',
+        traitEmpathy: traitEmpathy as 'empathetic' | 'objective',
+        traitSelling: traitSelling as 'consultive' | 'aggressive',
         voiceId: voiceId || undefined,
       });
-      setConfigStatus({ type: 'success', msg: 'Configurações salvas!' });
+      toast.success('Configurações salvas!');
       silentReload();
     } catch (err: unknown) {
-      setConfigStatus({ type: 'error', msg: err instanceof Error ? err.message : 'Erro ao salvar' });
+      toast.error(err instanceof Error ? err.message : 'Erro ao salvar');
     } finally {
       setSaving(false);
     }
@@ -130,15 +235,14 @@ export default function Copilot() {
 
   const handleSubmitDoc = async (e: React.FormEvent) => {
     e.preventDefault();
-    setDocStatus(null);
     setLoadingDoc(true);
     try {
       await sellers.uploadDocument(seller.id, text);
-      setDocStatus({ type: 'success', msg: 'Documento enviado!' });
+      toast.success('Documento enviado!');
       setText('');
       loadDocuments();
     } catch (err: unknown) {
-      setDocStatus({ type: 'error', msg: err instanceof Error ? err.message : 'Erro ao enviar' });
+      toast.error(err instanceof Error ? err.message : 'Erro ao enviar');
     } finally {
       setLoadingDoc(false);
     }
@@ -150,9 +254,9 @@ export default function Copilot() {
     try {
       await sellers.deleteDocument(seller.id, docId);
       setDocuments((prev) => prev.filter((d) => d.id !== docId));
-      setDocStatus({ type: 'success', msg: 'Documento removido.' });
+      toast.success('Documento removido.');
     } catch (err: unknown) {
-      setDocStatus({ type: 'error', msg: err instanceof Error ? err.message : 'Erro ao remover' });
+      toast.error(err instanceof Error ? err.message : 'Erro ao remover');
     } finally {
       setDeletingId(null);
     }
@@ -231,10 +335,6 @@ export default function Copilot() {
       {/* Config Tab */}
       {tab === 'config' && (
         <div key={`config-${animKey}`} className="animate-tab-enter">
-          {configStatus && (
-            <StatusBanner status={configStatus} onDismiss={() => setConfigStatus(null)} />
-          )}
-
           <form onSubmit={handleSaveConfig} className="space-y-6">
             {/* Identity Section */}
             <section className="bg-white border border-border rounded-2xl p-6 shadow-sm animate-fade-in-up">
@@ -255,6 +355,26 @@ export default function Copilot() {
                   </label>
                   <input className={inputCls} value={voiceId} onChange={(e) => setVoiceId(e.target.value)} placeholder="Opcional — habilita respostas em áudio" />
                 </div>
+              </div>
+            </section>
+
+            {/* Personality Section */}
+            <section className="bg-white border border-border rounded-2xl p-6 shadow-sm animate-fade-in-up" style={{ animationDelay: '40ms' }}>
+              <div className="flex items-center gap-2 mb-5">
+                <span className="text-lg">🎭</span>
+                <h3 className="text-sm font-bold text-navy">Personalidade</h3>
+              </div>
+              <p className="text-xs text-text-muted mb-5">Adapte o comportamento do seu copilot para ficar mais parecido com a forma que você fala.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {traitConfig.map((trait, i) => (
+                  <TraitCard
+                    key={trait.key}
+                    trait={trait}
+                    value={traitValues[trait.key]}
+                    onChange={(v) => traitSetters[trait.key](v)}
+                    index={i}
+                  />
+                ))}
               </div>
             </section>
 
@@ -286,10 +406,6 @@ export default function Copilot() {
       {/* Documents Tab */}
       {tab === 'documents' && (
         <div key={`docs-${animKey}`} className="animate-tab-enter">
-          {docStatus && (
-            <StatusBanner status={docStatus} onDismiss={() => setDocStatus(null)} />
-          )}
-
           <form onSubmit={handleSubmitDoc} className="bg-white border border-border rounded-2xl p-6 shadow-sm mb-6 animate-fade-in-up">
             <div className="flex items-center gap-2 mb-4">
               <span className="text-lg">✍️</span>

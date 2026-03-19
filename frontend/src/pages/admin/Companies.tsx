@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { companies } from '../../api/client';
 import type { Company, CreateCompanyDto } from '../../types';
 
@@ -11,26 +12,26 @@ export default function Companies() {
   const [list, setList] = useState<Company[]>([]);
   const [form, setForm] = useState<CreateCompanyDto>(empty);
   const [editId, setEditId] = useState<string | null>(null);
-  const [error, setError] = useState('');
 
-  const load = () => companies.list().then(setList).catch((e) => setError(e.message));
+  const load = () => companies.list().then(setList).catch((e) => toast.error(e.message));
 
   useEffect(() => { load(); }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     try {
       if (editId) {
         await companies.update(editId, form);
+        toast.success('Empresa atualizada!');
       } else {
         await companies.create(form);
+        toast.success('Empresa criada!');
       }
       setForm(empty);
       setEditId(null);
       load();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Erro desconhecido');
+      toast.error(err instanceof Error ? err.message : 'Erro desconhecido');
     }
   };
 
@@ -51,11 +52,6 @@ export default function Companies() {
   return (
     <div>
       <h2 className="text-2xl font-semibold text-navy mb-5">Empresas</h2>
-      {error && (
-        <div className="bg-danger/10 border border-danger text-danger px-4 py-3 rounded-lg mb-4 text-sm">
-          {error}
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="bg-surface border border-border rounded-xl p-5 mb-6">
         <h3 className="text-sm font-semibold text-text-muted mb-4 uppercase tracking-wide">

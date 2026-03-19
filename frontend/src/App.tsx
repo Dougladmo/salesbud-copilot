@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'sonner';
 import { SellerProvider } from './context/SellerContext';
 import SellerLayout from './components/SellerLayout';
 import AdminLayout from './components/AdminLayout';
@@ -11,6 +12,7 @@ import Documents from './pages/admin/Documents';
 export default function App() {
   return (
     <BrowserRouter>
+      <Toaster position="top-right" richColors closeButton />
       <SellerProvider>
         <Routes>
           {/* Seller select (login) */}
