@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { SellerProvider } from './context/SellerContext';
+import ErrorBoundary from './components/ErrorBoundary';
 import SellerLayout from './components/SellerLayout';
 import AdminLayout from './components/AdminLayout';
 import SellerSelect from './pages/seller/SellerSelect';
@@ -11,6 +12,7 @@ import Documents from './pages/admin/Documents';
 
 export default function App() {
   return (
+    <ErrorBoundary>
     <BrowserRouter>
       <Toaster position="top-right" richColors closeButton />
       <SellerProvider>
@@ -34,5 +36,6 @@ export default function App() {
         </Routes>
       </SellerProvider>
     </BrowserRouter>
+    </ErrorBoundary>
   );
 }

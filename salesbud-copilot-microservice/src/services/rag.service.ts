@@ -68,6 +68,16 @@ export class RagService {
     return response.data[0].embedding;
   }
 
+  private extractResults(matches: any[]): RagResult[] {
+    return (matches || [])
+      .filter((m: any) => m.metadata)
+      .map((m: any) => ({
+        text: (m.metadata.text as string) || '',
+        score: m.score || 0,
+        metadata: m.metadata as Record<string, any>,
+      }));
+  }
+
   async query(
     companyNamespace: string,
     sellerNamespace: string | null,
@@ -76,37 +86,18 @@ export class RagService {
   ): Promise<RagResult[]> {
     await this.ensureIndex();
     const embedding = await this.generateEmbedding(queryText);
-    const results: RagResult[] = [];
 
-    const companyResults = await this.index
-      .namespace(companyNamespace)
-      .query({ vector: embedding, topK, includeMetadata: true });
-
-    for (const match of companyResults.matches || []) {
-      if (match.metadata) {
-        results.push({
-          text: (match.metadata.text as string) || '',
-          score: match.score || 0,
-          metadata: match.metadata as Record<string, any>,
-        });
-      }
-    }
+    const queryParams = { vector: embedding, topK, includeMetadata: true };
+    const queries: Promise<any>[] = [
+      this.index.namespace(companyNamespace).query(queryParams),
+    ];
 
     if (sellerNamespace) {
-      const sellerResults = await this.index
-        .namespace(sellerNamespace)
-        .query({ vector: embedding, topK, includeMetadata: true });
-
-      for (const match of sellerResults.matches || []) {
-        if (match.metadata) {
-          results.push({
-            text: (match.metadata.text as string) || '',
-            score: match.score || 0,
-            metadata: match.metadata as Record<string, any>,
-          });
-        }
-      }
+      queries.push(this.index.namespace(sellerNamespace).query(queryParams));
     }
+
+    const queryResults = await Promise.all(queries);
+    const results = queryResults.flatMap((r) => this.extractResults(r.matches));
 
     results.sort((a, b) => b.score - a.score);
 

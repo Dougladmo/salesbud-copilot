@@ -11,8 +11,22 @@ interface ProcessBufferPayload {
   remoteJid: string;
 }
 
+function isProcessBufferPayload(data: unknown): data is ProcessBufferPayload {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    typeof (data as ProcessBufferPayload).sellerId === 'string' &&
+    typeof (data as ProcessBufferPayload).remoteJid === 'string'
+  );
+}
+
 export async function handleProcessBuffer(data: unknown): Promise<void> {
-  const { sellerId, remoteJid } = data as ProcessBufferPayload;
+  if (!isProcessBufferPayload(data)) {
+    logger.error({ data }, 'Invalid process-buffer payload');
+    return;
+  }
+
+  const { sellerId, remoteJid } = data;
   logger.info(`Processing buffer: seller=${sellerId} jid=${remoteJid}`);
 
   const bufferService = container.resolve(MessageBufferService);

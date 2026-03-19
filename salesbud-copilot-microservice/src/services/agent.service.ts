@@ -9,15 +9,26 @@ import { SellerService } from './seller.service.js';
 import { RagService } from './rag.service.js';
 import { buildSystemPrompt } from '../utils/prompt-builder.js';
 import { sanitizeUserInput, sanitizeOutput } from '../utils/prompt-guard.js';
-import { createRagSearchTool } from '../jobs/rag-search.tool.js';
-import { createThinkTool } from '../jobs/think.tool.js';
+import { createRagSearchTool } from '../tools/rag-search.tool.js';
+import { createThinkTool } from '../tools/think.tool.js';
 
 @injectable()
 export class AgentService {
+  private readonly model: ChatOpenAI;
+
   constructor(
     @inject(SellerService) private readonly sellerService: SellerService,
     @inject(RagService) private readonly ragService: RagService,
-  ) {}
+  ) {
+    this.model = new ChatOpenAI({
+      model: 'deepseek/deepseek-v3.2',
+      temperature: 0.7,
+      apiKey: env.OPENROUTER_API_KEY,
+      configuration: {
+        baseURL: 'https://openrouter.ai/api/v1',
+      },
+    } as ChatOpenAIFields);
+  }
 
   async processMessage(
     sellerId: string,
@@ -48,16 +59,7 @@ export class AgentService {
       createThinkTool(),
     ];
 
-    const model = new ChatOpenAI({
-      model: 'deepseek/deepseek-v3.2',
-      temperature: 0.7,
-      apiKey: env.OPENROUTER_API_KEY,
-      configuration: {
-        baseURL: 'https://openrouter.ai/api/v1',
-      },
-    } as ChatOpenAIFields);
-
-    const agent = createAgent({ model, tools, systemPrompt });
+    const agent = createAgent({ model: this.model, tools, systemPrompt });
 
     const messages = [
       ...history,

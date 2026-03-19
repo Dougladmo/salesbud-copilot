@@ -49,8 +49,15 @@ export class MessageBufferService {
 
   async flushBuffer(sellerId: string, remoteJid: string): Promise<string[]> {
     const key = `buf:${sellerId}:${remoteJid}`;
-    const messages = await redis.lrange(key, 0, -1);
-    await redis.del(key);
-    return messages;
+    const results = await redis
+      .multi()
+      .lrange(key, 0, -1)
+      .del(key)
+      .exec();
+
+    if (!results) return [];
+    const [err, messages] = results[0];
+    if (err) throw err;
+    return (messages as string[]) || [];
   }
 }

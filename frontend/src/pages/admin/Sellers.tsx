@@ -25,7 +25,7 @@ export default function Sellers() {
 
   const load = () => {
     sellers.list().then(setList).catch((e) => toast.error(e.message));
-    companies.list().then(setCompanyList).catch(() => {});
+    companies.list().then(setCompanyList).catch((e) => toast.error(e instanceof Error ? e.message : 'Erro ao carregar empresas'));
   };
 
   useEffect(() => { load(); }, []);
@@ -72,8 +72,12 @@ export default function Sellers() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Tem certeza que deseja excluir?')) return;
-    await sellers.delete(id);
-    load();
+    try {
+      await sellers.delete(id);
+      load();
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Erro ao excluir vendedor');
+    }
   };
 
   const traitLabel: Record<string, string> = {

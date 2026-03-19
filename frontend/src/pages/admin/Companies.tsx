@@ -45,8 +45,12 @@ export default function Companies() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Tem certeza que deseja excluir?')) return;
-    await companies.delete(id);
-    load();
+    try {
+      await companies.delete(id);
+      load();
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Erro ao excluir empresa');
+    }
   };
 
   return (

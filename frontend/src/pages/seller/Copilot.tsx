@@ -9,8 +9,8 @@ const inputCls =
 
 type Tab = 'config' | 'documents';
 
-/** Unique key to re-trigger CSS enter animation on tab switch */
-let tabKey = 0;
+/** Counter for re-triggering CSS enter animation on tab switch */
+let tabKeyCounter = 0;
 
 interface TraitOption {
   value: string;
@@ -264,7 +264,7 @@ export default function Copilot() {
 
   const handleTabChange = (newTab: Tab) => {
     if (newTab === tab) return;
-    setAnimKey(++tabKey);
+    setAnimKey(++tabKeyCounter);
     setTab(newTab);
   };
 

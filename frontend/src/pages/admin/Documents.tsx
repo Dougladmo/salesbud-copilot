@@ -19,8 +19,8 @@ export default function Documents() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
-    companies.list().then(setCompanyList).catch(() => {});
-    sellers.list().then(setSellerList).catch(() => {});
+    companies.list().then(setCompanyList).catch((e) => toast.error(e instanceof Error ? e.message : 'Erro ao carregar empresas'));
+    sellers.list().then(setSellerList).catch((e) => toast.error(e instanceof Error ? e.message : 'Erro ao carregar vendedores'));
   }, []);
 
   const loadDocuments = useCallback(async () => {
@@ -65,7 +65,7 @@ export default function Documents() {
       setText('');
       loadDocuments();
       if (targetType === 'seller') {
-        sellers.list().then(setSellerList).catch(() => {});
+        sellers.list().then(setSellerList).catch((e) => toast.error(e instanceof Error ? e.message : 'Erro ao atualizar vendedores'));
       }
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Erro ao enviar documento');

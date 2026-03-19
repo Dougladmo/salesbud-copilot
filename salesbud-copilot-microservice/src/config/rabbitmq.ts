@@ -1,11 +1,11 @@
-import amqp from 'amqplib';
+import amqp, { type ChannelModel, type Channel } from 'amqplib';
 import { env } from './env.js';
 import { logger } from './logger.js';
 
 const QUEUE = 'sdr_message_queue';
 
-let connection: any;
-let channel: any;
+let connection: ChannelModel | null = null;
+let channel: Channel | null = null;
 
 export async function connectRabbitMQ() {
   connection = await amqp.connect(env.RABBITMQ_URL);
@@ -48,6 +48,6 @@ export async function consumeQueue(
 }
 
 export async function closeRabbitMQ(): Promise<void> {
-  await channel?.close();
-  await connection?.close();
+  if (channel) await channel.close();
+  if (connection) await connection.close();
 }
