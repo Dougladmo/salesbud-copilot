@@ -1,6 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { companies, sellers } from '../api/client';
+import type { DocumentRecord } from '../api/client';
 import type { Company, Seller } from '../types';
+
+const inputCls = 'bg-white border border-border rounded-lg px-3 py-2 text-sm text-navy outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition';
+const btnPrimary = 'bg-navy-dark text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-navy-light transition cursor-pointer';
 
 export default function Documents() {
   const [companyList, setCompanyList] = useState<Company[]>([]);
@@ -10,11 +14,45 @@ export default function Documents() {
   const [text, setText] = useState('');
   const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [documents, setDocuments] = useState<DocumentRecord[]>([]);
+  const [loadingDocs, setLoadingDocs] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     companies.list().then(setCompanyList).catch(() => {});
     sellers.list().then(setSellerList).catch(() => {});
   }, []);
+
+  const loadDocuments = useCallback(async () => {
+    if (!targetId) {
+      setDocuments([]);
+      return;
+    }
+    setLoadingDocs(true);
+    try {
+      const docs = targetType === 'company'
+        ? await companies.listDocuments(targetId)
+        : await sellers.listDocuments(targetId);
+      setDocuments(docs);
+    } catch {
+      setDocuments([]);
+    } finally {
+      setLoadingDocs(false);
+    }
+  }, [targetId, targetType]);
+
+  useEffect(() => {
+    loadDocuments();
+  }, [loadDocuments]);
+
+  const getSelectedNamespace = (): string | null => {
+    if (targetType === 'company') {
+      const c = companyList.find((x) => x.id === targetId);
+      return c?.pineconeNamespace || null;
+    }
+    const s = sellerList.find((x) => x.id === targetId);
+    return s?.pineconeNamespace || null;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +67,10 @@ export default function Documents() {
         message: `Documento enviado! ID: ${result.id} | Namespace: ${result.namespace}`,
       });
       setText('');
+      loadDocuments();
+      if (targetType === 'seller') {
+        sellers.list().then(setSellerList).catch(() => {});
+      }
     } catch (err: unknown) {
       setStatus({
         type: 'error',
@@ -39,31 +81,59 @@ export default function Documents() {
     }
   };
 
+  const handleDelete = async (docId: string) => {
+    if (!confirm('Tem certeza que deseja remover este documento da base de conhecimento?')) return;
+    setDeletingId(docId);
+    try {
+      if (targetType === 'company') {
+        await companies.deleteDocument(targetId, docId);
+      } else {
+        await sellers.deleteDocument(targetId, docId);
+      }
+      setDocuments((prev) => prev.filter((d) => d.id !== docId));
+      setStatus({ type: 'success', message: 'Documento removido com sucesso.' });
+    } catch (err: unknown) {
+      setStatus({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Erro ao remover documento',
+      });
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const namespace = getSelectedNamespace();
+
   return (
     <div>
-      <h2>Upload de Documentos</h2>
-      <p className="subtitle">
-        Envie documentos para a base de conhecimento (RAG) de uma empresa ou vendedor.
+      <h2 className="text-2xl font-semibold text-navy mb-2">Base de Conhecimento (RAG)</h2>
+      <p className="text-text-muted text-sm mb-5">
+        Gerencie os documentos da base de conhecimento de empresas e vendedores. O namespace no Pinecone
+        {' '}será criado automaticamente ao enviar o primeiro documento.
       </p>
 
       {status && (
-        <p className={status.type === 'success' ? 'success' : 'error'}>
+        <div className={`px-4 py-3 rounded-lg mb-4 text-sm border ${
+          status.type === 'success'
+            ? 'bg-success/10 border-success text-success'
+            : 'bg-danger/10 border-danger text-danger'
+        }`}>
           {status.message}
-        </p>
+        </div>
       )}
 
-      <form onSubmit={handleSubmit} className="form-card">
-        <div className="form-grid">
-          <label>
+      <form onSubmit={handleSubmit} className="bg-surface border border-border rounded-xl p-5 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted">
             Tipo
-            <select value={targetType} onChange={(e) => { setTargetType(e.target.value as 'company' | 'seller'); setTargetId(''); }}>
+            <select className={inputCls} value={targetType} onChange={(e) => { setTargetType(e.target.value as 'company' | 'seller'); setTargetId(''); }}>
               <option value="company">Empresa</option>
               <option value="seller">Vendedor</option>
             </select>
           </label>
-          <label>
+          <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted">
             {targetType === 'company' ? 'Empresa' : 'Vendedor'}
-            <select value={targetId} onChange={(e) => setTargetId(e.target.value)} required>
+            <select className={inputCls} value={targetId} onChange={(e) => setTargetId(e.target.value)} required>
               <option value="">Selecione...</option>
               {targetType === 'company'
                 ? companyList.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)
@@ -73,10 +143,17 @@ export default function Documents() {
           </label>
         </div>
 
-        <label className="full-width">
+        {targetId && (
+          <div className="mt-2 text-xs text-text-muted">
+            Namespace: <code className="bg-white border border-border px-2 py-0.5 rounded text-xs">{namespace || 'Será criado automaticamente'}</code>
+          </div>
+        )}
+
+        <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted mt-4">
           Conteúdo do Documento
           <textarea
-            rows={10}
+            className={`${inputCls} resize-y`}
+            rows={8}
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Cole aqui o conteúdo do documento (informações de produto, FAQ, políticas, etc.)"
@@ -84,12 +161,60 @@ export default function Documents() {
           />
         </label>
 
-        <div className="form-actions">
-          <button type="submit" disabled={loading}>
-            {loading ? 'Enviando...' : 'Enviar Documento'}
+        <div className="flex gap-3 mt-4">
+          <button type="submit" className={`${btnPrimary} disabled:opacity-50 disabled:cursor-not-allowed`} disabled={loading || !targetId}>
+            {loading ? 'Enviando...' : 'Adicionar Documento'}
           </button>
         </div>
       </form>
+
+      {targetId && (
+        <>
+          <h3 className="text-sm font-semibold text-text-muted mb-3 uppercase tracking-wide">
+            Documentos Cadastrados ({documents.length})
+          </h3>
+          {loadingDocs ? (
+            <p className="text-text-muted text-sm">Carregando documentos...</p>
+          ) : documents.length === 0 ? (
+            <div className="bg-surface border border-border rounded-xl p-8 text-center text-text-muted text-sm">
+              Nenhum documento encontrado nesta base de conhecimento.
+            </div>
+          ) : (
+            <div className="bg-surface border border-border rounded-xl overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-surface-hover">
+                  <tr>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">ID</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Conteúdo</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider w-20">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {documents.map((doc) => (
+                    <tr key={doc.id} className="border-t border-border hover:bg-surface-hover transition">
+                      <td className="px-4 py-3 text-sm">
+                        <code className="bg-white border border-border px-2 py-0.5 rounded text-xs text-text-muted">{doc.id.slice(0, 8)}...</code>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-text-muted max-w-[500px] truncate" title={doc.text}>
+                        {doc.text.length > 120 ? doc.text.slice(0, 120) + '...' : doc.text}
+                      </td>
+                      <td className="px-4 py-3">
+                        <button
+                          className="bg-danger text-white px-3 py-1 rounded-full text-xs font-medium hover:bg-danger-hover transition cursor-pointer disabled:opacity-50"
+                          disabled={deletingId === doc.id}
+                          onClick={() => handleDelete(doc.id)}
+                        >
+                          {deletingId === doc.id ? '...' : 'Remover'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }

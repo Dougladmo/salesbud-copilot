@@ -1,4 +1,4 @@
-import { injectable } from 'tsyringe';
+import { injectable, inject } from 'tsyringe';
 import { AppDataSource } from '../config/database.js';
 import { env } from '../config/env.js';
 import { Seller } from '../models/seller.model.js';
@@ -12,7 +12,7 @@ export class SellerService {
   private readonly repo = AppDataSource.getRepository(Seller);
   private readonly evolutionService: EvolutionService;
 
-  constructor(evolutionService: EvolutionService) {
+  constructor(@inject(EvolutionService) evolutionService: EvolutionService) {
     this.evolutionService = evolutionService;
   }
 

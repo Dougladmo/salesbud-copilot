@@ -8,6 +8,13 @@ const empty: CreateSellerDto = {
   agentName: '',
 };
 
+const inputCls = 'bg-white border border-border rounded-lg px-3 py-2 text-sm text-navy outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition';
+const selectCls = inputCls;
+const btnPrimary = 'bg-navy-dark text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-navy-light transition cursor-pointer';
+const btnSecondary = 'bg-surface-hover text-text-muted px-5 py-2 rounded-full text-sm font-medium hover:bg-border transition cursor-pointer';
+const btnSmPrimary = 'bg-navy-dark text-white px-3 py-1 rounded-full text-xs font-medium hover:bg-navy-light transition cursor-pointer';
+const btnSmDanger = 'bg-danger text-white px-3 py-1 rounded-full text-xs font-medium hover:bg-danger-hover transition cursor-pointer';
+
 export default function Sellers() {
   const [list, setList] = useState<Seller[]>([]);
   const [companyList, setCompanyList] = useState<Company[]>([]);
@@ -16,7 +23,6 @@ export default function Sellers() {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [error, setError] = useState('');
 
-  // QR Code modal state
   const [qrSeller, setQrSeller] = useState<Seller | null>(null);
   const [qrData, setQrData] = useState<QrCodeResponse | null>(null);
   const [qrLoading, setQrLoading] = useState(false);
@@ -132,7 +138,6 @@ export default function Sellers() {
     }
   };
 
-  // Auto-check connection status while QR modal is open
   useEffect(() => {
     if (!qrSeller || qrData?.status === 'already_connected') return;
     const interval = setInterval(checkStatus, 3000);
@@ -149,214 +154,245 @@ export default function Sellers() {
 
   return (
     <div>
-      <h2>Vendedores</h2>
-      {error && <p className="error">{error}</p>}
+      <h2 className="text-2xl font-semibold text-navy mb-5">Vendedores</h2>
+      {error && (
+        <div className="bg-danger/10 border border-danger text-danger px-4 py-3 rounded-lg mb-4 text-sm">
+          {error}
+        </div>
+      )}
 
-      <form onSubmit={handleSubmit} className="form-card">
-        <h3>{editId ? 'Editar Vendedor' : 'Novo Vendedor'}</h3>
-        <div className="form-grid">
-          <label>
+      <form onSubmit={handleSubmit} className="bg-surface border border-border rounded-xl p-5 mb-6">
+        <h3 className="text-sm font-semibold text-text-muted mb-4 uppercase tracking-wide">
+          {editId ? 'Editar Vendedor' : 'Novo Vendedor'}
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted">
             Empresa
-            <select
-              value={form.companyId}
-              onChange={(e) => setForm({ ...form, companyId: e.target.value })}
-              required
-              disabled={!!editId}
-            >
+            <select className={selectCls} value={form.companyId} onChange={(e) => setForm({ ...form, companyId: e.target.value })} required disabled={!!editId}>
               <option value="">Selecione...</option>
-              {companyList.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
+              {companyList.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </label>
-          <label>
+          <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted">
             Nome
-            <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+            <input className={inputCls} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
           </label>
-          <label>
+          <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted">
             Nome do Agente
-            <input value={form.agentName} onChange={(e) => setForm({ ...form, agentName: e.target.value })} required />
+            <input className={inputCls} value={form.agentName} onChange={(e) => setForm({ ...form, agentName: e.target.value })} required />
           </label>
         </div>
 
-        <button type="button" className="btn-link" onClick={() => setShowAdvanced(!showAdvanced)}>
-          {showAdvanced ? '▼ Ocultar' : '▶ Configurações avançadas'}
+        <button
+          type="button"
+          className="text-accent text-xs font-medium mt-3 hover:text-accent-hover transition cursor-pointer bg-transparent border-none"
+          onClick={() => setShowAdvanced(!showAdvanced)}
+        >
+          {showAdvanced ? '▼ Ocultar configurações avançadas' : '▶ Configurações avançadas'}
         </button>
 
         {showAdvanced && (
-          <>
-            <div className="form-grid">
-              <label>
+          <div className="mt-4 space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted">
                 Pinecone Namespace
-                <input value={form.pineconeNamespace || ''} onChange={(e) => setForm({ ...form, pineconeNamespace: e.target.value || undefined })} />
+                <input className={inputCls} value={form.pineconeNamespace || ''} onChange={(e) => setForm({ ...form, pineconeNamespace: e.target.value || undefined })} />
               </label>
-              <label>
+              <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted">
                 Voice ID (ElevenLabs)
-                <input value={form.voiceId || ''} onChange={(e) => setForm({ ...form, voiceId: e.target.value || undefined })} />
+                <input className={inputCls} value={form.voiceId || ''} onChange={(e) => setForm({ ...form, voiceId: e.target.value || undefined })} />
               </label>
             </div>
 
-            <h4>Personalidade</h4>
-            <div className="form-grid">
-              <label>
-                Formalidade
-                <select value={form.traitFormality || 'informal'} onChange={(e) => setForm({ ...form, traitFormality: e.target.value as 'formal' | 'informal' })}>
-                  <option value="formal">Formal</option>
-                  <option value="informal">Informal</option>
-                </select>
-              </label>
-              <label>
-                Humor
-                <select value={form.traitHumor || 'humorous'} onChange={(e) => setForm({ ...form, traitHumor: e.target.value as 'humorous' | 'serious' })}>
-                  <option value="humorous">Humorístico</option>
-                  <option value="serious">Sério</option>
-                </select>
-              </label>
-              <label>
-                Comunicação
-                <select value={form.traitCommunication || 'direct'} onChange={(e) => setForm({ ...form, traitCommunication: e.target.value as 'direct' | 'detailed' })}>
-                  <option value="direct">Direto</option>
-                  <option value="detailed">Detalhado</option>
-                </select>
-              </label>
-              <label>
-                Empatia
-                <select value={form.traitEmpathy || 'empathetic'} onChange={(e) => setForm({ ...form, traitEmpathy: e.target.value as 'empathetic' | 'objective' })}>
-                  <option value="empathetic">Empático</option>
-                  <option value="objective">Objetivo</option>
-                </select>
-              </label>
-              <label>
-                Estilo de Venda
-                <select value={form.traitSelling || 'consultive'} onChange={(e) => setForm({ ...form, traitSelling: e.target.value as 'consultive' | 'aggressive' })}>
-                  <option value="consultive">Consultivo</option>
-                  <option value="aggressive">Agressivo</option>
-                </select>
-              </label>
+            <div>
+              <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-3">Personalidade</h4>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+                <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted">
+                  Formalidade
+                  <select className={selectCls} value={form.traitFormality || 'informal'} onChange={(e) => setForm({ ...form, traitFormality: e.target.value as 'formal' | 'informal' })}>
+                    <option value="formal">Formal</option>
+                    <option value="informal">Informal</option>
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted">
+                  Humor
+                  <select className={selectCls} value={form.traitHumor || 'humorous'} onChange={(e) => setForm({ ...form, traitHumor: e.target.value as 'humorous' | 'serious' })}>
+                    <option value="humorous">Humorístico</option>
+                    <option value="serious">Sério</option>
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted">
+                  Comunicação
+                  <select className={selectCls} value={form.traitCommunication || 'direct'} onChange={(e) => setForm({ ...form, traitCommunication: e.target.value as 'direct' | 'detailed' })}>
+                    <option value="direct">Direto</option>
+                    <option value="detailed">Detalhado</option>
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted">
+                  Empatia
+                  <select className={selectCls} value={form.traitEmpathy || 'empathetic'} onChange={(e) => setForm({ ...form, traitEmpathy: e.target.value as 'empathetic' | 'objective' })}>
+                    <option value="empathetic">Empático</option>
+                    <option value="objective">Objetivo</option>
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted">
+                  Estilo de Venda
+                  <select className={selectCls} value={form.traitSelling || 'consultive'} onChange={(e) => setForm({ ...form, traitSelling: e.target.value as 'consultive' | 'aggressive' })}>
+                    <option value="consultive">Consultivo</option>
+                    <option value="aggressive">Agressivo</option>
+                  </select>
+                </label>
+              </div>
             </div>
 
-            <h4>Configurações de Timing</h4>
-            <div className="form-grid">
-              <label>
-                Timeout (ms)
-                <input type="number" min={1000} value={form.timeoutMs || 5000} onChange={(e) => setForm({ ...form, timeoutMs: +e.target.value })} />
-              </label>
-              <label>
-                Tempo/Char (ms)
-                <input type="number" min={10} value={form.timePerCharMs || 50} onChange={(e) => setForm({ ...form, timePerCharMs: +e.target.value })} />
-              </label>
-              <label>
-                Máx. Mensagens Memória
-                <input type="number" min={1} value={form.maxMemoryMessages || 7} onChange={(e) => setForm({ ...form, maxMemoryMessages: +e.target.value })} />
-              </label>
-              <label>
-                Limiar de Áudio (chars)
-                <input type="number" min={100} value={form.audioThreshold || 500} onChange={(e) => setForm({ ...form, audioThreshold: +e.target.value })} />
-              </label>
+            <div>
+              <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-3">Configurações de Timing</h4>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted">
+                  Timeout (ms)
+                  <input className={inputCls} type="number" min={1000} value={form.timeoutMs || 5000} onChange={(e) => setForm({ ...form, timeoutMs: +e.target.value })} />
+                </label>
+                <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted">
+                  Tempo/Char (ms)
+                  <input className={inputCls} type="number" min={10} value={form.timePerCharMs || 50} onChange={(e) => setForm({ ...form, timePerCharMs: +e.target.value })} />
+                </label>
+                <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted">
+                  Máx. Mensagens Memória
+                  <input className={inputCls} type="number" min={1} value={form.maxMemoryMessages || 7} onChange={(e) => setForm({ ...form, maxMemoryMessages: +e.target.value })} />
+                </label>
+                <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted">
+                  Limiar de Áudio (chars)
+                  <input className={inputCls} type="number" min={100} value={form.audioThreshold || 500} onChange={(e) => setForm({ ...form, audioThreshold: +e.target.value })} />
+                </label>
+              </div>
             </div>
 
-            <label className="full-width">
+            <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted col-span-full">
               Prompt Customizado
               <textarea
+                className={`${inputCls} resize-y`}
                 rows={3}
                 value={form.customPrompt || ''}
                 onChange={(e) => setForm({ ...form, customPrompt: e.target.value || undefined })}
               />
             </label>
-          </>
+          </div>
         )}
 
-        <div className="form-actions">
-          <button type="submit">{editId ? 'Salvar' : 'Criar'}</button>
+        <div className="flex gap-3 mt-4">
+          <button type="submit" className={btnPrimary}>{editId ? 'Salvar' : 'Criar'}</button>
           {editId && (
-            <button type="button" className="btn-secondary" onClick={() => { setEditId(null); setForm(empty); setShowAdvanced(false); }}>
+            <button type="button" className={btnSecondary} onClick={() => { setEditId(null); setForm(empty); setShowAdvanced(false); }}>
               Cancelar
             </button>
           )}
         </div>
       </form>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Nome</th>
-            <th>Agente</th>
-            <th>Empresa</th>
-            <th>WhatsApp</th>
-            <th>Copilot</th>
-            <th>Personalidade</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          {list.map((s) => (
-            <tr key={s.id}>
-              <td>{s.name}</td>
-              <td>{s.agentName}</td>
-              <td>{s.company?.name || s.companyId.slice(0, 8)}</td>
-              <td>
-                {s.whatsappConnected ? (
-                  <span className="badge badge-active" title="Conectado" style={{ cursor: 'pointer' }} onClick={() => disconnectWhatsApp(s)}>
-                    Conectado
-                  </span>
-                ) : (
-                  <button className="btn-sm btn-connect" onClick={() => openQrModal(s)}>
-                    Conectar
-                  </button>
-                )}
-              </td>
-              <td>
-                <button
-                  className={`btn-toggle ${s.isActive ? 'btn-toggle-on' : 'btn-toggle-off'}`}
-                  onClick={() => toggleCopilot(s)}
-                  title={s.isActive ? 'Clique para desligar' : 'Clique para ligar'}
-                >
-                  {s.isActive ? 'ON' : 'OFF'}
-                </button>
-              </td>
-              <td className="traits">
-                <span className="tag">{traitLabel[s.traitFormality]}</span>
-                <span className="tag">{traitLabel[s.traitHumor]}</span>
-                <span className="tag">{traitLabel[s.traitSelling]}</span>
-              </td>
-              <td className="actions">
-                <button className="btn-sm" onClick={() => startEdit(s)}>Editar</button>
-                <button className="btn-sm btn-danger" onClick={() => handleDelete(s.id)}>Excluir</button>
-              </td>
-            </tr>
-          ))}
-          {list.length === 0 && (
-            <tr><td colSpan={7} className="empty">Nenhum vendedor cadastrado</td></tr>
-          )}
-        </tbody>
-      </table>
+      <div className="bg-surface border border-border rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-surface-hover">
+              <tr>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Nome</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Agente</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Empresa</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">WhatsApp</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Copilot</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Personalidade</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {list.map((s) => (
+                <tr key={s.id} className="border-t border-border hover:bg-surface-hover transition">
+                  <td className="px-4 py-3 text-sm text-navy font-medium">{s.name}</td>
+                  <td className="px-4 py-3 text-sm text-text-muted">{s.agentName}</td>
+                  <td className="px-4 py-3 text-sm text-text-muted">{s.company?.name || s.companyId.slice(0, 8)}</td>
+                  <td className="px-4 py-3">
+                    {s.whatsappConnected ? (
+                      <span
+                        className="inline-block px-3 py-0.5 rounded-full text-xs font-semibold bg-success text-white cursor-pointer hover:bg-success-hover transition"
+                        onClick={() => disconnectWhatsApp(s)}
+                        title="Clique para desconectar"
+                      >
+                        Conectado
+                      </span>
+                    ) : (
+                      <button
+                        className="bg-warning text-navy-dark px-3 py-1 rounded-full text-xs font-semibold hover:bg-amber-400 transition cursor-pointer"
+                        onClick={() => openQrModal(s)}
+                      >
+                        Conectar
+                      </button>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      className={`px-3 py-1 rounded-full text-xs font-bold transition cursor-pointer ${
+                        s.isActive
+                          ? 'bg-success text-white hover:bg-success-hover'
+                          : 'bg-text-muted text-white hover:bg-gray-500'
+                      }`}
+                      onClick={() => toggleCopilot(s)}
+                      title={s.isActive ? 'Clique para desligar' : 'Clique para ligar'}
+                    >
+                      {s.isActive ? 'ON' : 'OFF'}
+                    </button>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex gap-1 flex-wrap">
+                      <span className="bg-white border border-border px-2 py-0.5 rounded text-[10px] text-text-muted">{traitLabel[s.traitFormality]}</span>
+                      <span className="bg-white border border-border px-2 py-0.5 rounded text-[10px] text-text-muted">{traitLabel[s.traitHumor]}</span>
+                      <span className="bg-white border border-border px-2 py-0.5 rounded text-[10px] text-text-muted">{traitLabel[s.traitSelling]}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex gap-2">
+                      <button className={btnSmPrimary} onClick={() => startEdit(s)}>Editar</button>
+                      <button className={btnSmDanger} onClick={() => handleDelete(s.id)}>Excluir</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {list.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="text-center py-8 text-text-muted text-sm">
+                    Nenhum vendedor cadastrado
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       {/* QR Code Modal */}
       {qrSeller && (
-        <div className="modal-overlay" onClick={() => { setQrSeller(null); setQrData(null); }}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h3>Conectar WhatsApp — {qrSeller.name}</h3>
-            <p className="modal-subtitle">Escaneie o QR Code com o WhatsApp do vendedor</p>
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={() => { setQrSeller(null); setQrData(null); }}>
+          <div className="bg-white border border-border rounded-2xl p-7 max-w-md w-[90%] text-center shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold text-navy mb-1">Conectar WhatsApp</h3>
+            <p className="text-text-muted text-sm mb-5">{qrSeller.name} — Escaneie o QR Code</p>
 
-            <div className="qr-container">
-              {qrLoading && <div className="qr-loading">Carregando...</div>}
+            <div className="bg-surface rounded-xl p-4 mx-auto mb-5 min-h-[280px] flex items-center justify-center max-w-[300px]">
+              {qrLoading && <span className="text-text-muted text-sm">Carregando...</span>}
               {!qrLoading && qrData?.base64 && (
-                <img src={qrData.base64} alt="QR Code WhatsApp" className="qr-image" />
+                <img src={qrData.base64} alt="QR Code WhatsApp" className="max-w-full h-auto rounded-lg" />
               )}
               {!qrLoading && qrData?.status === 'already_connected' && (
-                <div className="qr-connected">WhatsApp já conectado!</div>
+                <span className="text-success font-semibold">WhatsApp já conectado!</span>
               )}
               {!qrLoading && qrData?.status === 'error' && (
-                <div className="qr-error">Erro ao gerar QR Code</div>
+                <span className="text-danger text-sm">Erro ao gerar QR Code</span>
               )}
               {!qrLoading && !qrData?.base64 && !qrData?.status && (
-                <div className="qr-error">QR Code não disponível</div>
+                <span className="text-danger text-sm">QR Code não disponível</span>
               )}
             </div>
 
-            <div className="modal-actions">
-              <button onClick={refreshQr} disabled={qrLoading}>Atualizar QR Code</button>
-              <button className="btn-secondary" onClick={() => { setQrSeller(null); setQrData(null); }}>Fechar</button>
+            <div className="flex gap-3 justify-center">
+              <button className={btnPrimary} onClick={refreshQr} disabled={qrLoading}>Atualizar QR Code</button>
+              <button className={btnSecondary} onClick={() => { setQrSeller(null); setQrData(null); }}>Fechar</button>
             </div>
           </div>
         </div>

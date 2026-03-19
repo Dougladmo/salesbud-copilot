@@ -1,4 +1,4 @@
-import { injectable } from 'tsyringe';
+import { injectable, inject } from 'tsyringe';
 import { ChatOpenAI } from '@langchain/openai';
 import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages';
 import { createReactAgent } from '@langchain/langgraph/prebuilt';
@@ -14,8 +14,8 @@ import { createThinkTool } from '../jobs/think.tool.js';
 @injectable()
 export class AgentService {
   constructor(
-    private readonly sellerService: SellerService,
-    private readonly ragService: RagService,
+    @inject(SellerService) private readonly sellerService: SellerService,
+    @inject(RagService) private readonly ragService: RagService,
   ) {}
 
   async processMessage(

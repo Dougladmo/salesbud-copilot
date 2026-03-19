@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || '';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
@@ -25,6 +25,12 @@ import type {
   ConnectionStatus,
 } from '../types';
 
+export interface DocumentRecord {
+  id: string;
+  text: string;
+  metadata: Record<string, unknown>;
+}
+
 export const companies = {
   list: () => request<Company[]>('/companies'),
   get: (id: string) => request<Company>(`/companies/${id}`),
@@ -34,11 +40,15 @@ export const companies = {
     request<Company>(`/companies/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   delete: (id: string) =>
     request<void>(`/companies/${id}`, { method: 'DELETE' }),
+  listDocuments: (companyId: string) =>
+    request<DocumentRecord[]>(`/companies/${companyId}/documents`),
   uploadDocument: (companyId: string, text: string, metadata?: Record<string, unknown>) =>
     request<{ id: string; namespace: string; status: string }>(
       `/companies/${companyId}/documents`,
       { method: 'POST', body: JSON.stringify({ text, metadata }) },
     ),
+  deleteDocument: (companyId: string, documentId: string) =>
+    request<void>(`/companies/${companyId}/documents/${documentId}`, { method: 'DELETE' }),
 };
 
 export const sellers = {
@@ -50,11 +60,15 @@ export const sellers = {
     request<Seller>(`/sellers/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   delete: (id: string) =>
     request<void>(`/sellers/${id}`, { method: 'DELETE' }),
+  listDocuments: (sellerId: string) =>
+    request<DocumentRecord[]>(`/sellers/${sellerId}/documents`),
   uploadDocument: (sellerId: string, text: string, metadata?: Record<string, unknown>) =>
     request<{ id: string; namespace: string; status: string }>(
       `/sellers/${sellerId}/documents`,
       { method: 'POST', body: JSON.stringify({ text, metadata }) },
     ),
+  deleteDocument: (sellerId: string, documentId: string) =>
+    request<void>(`/sellers/${sellerId}/documents/${documentId}`, { method: 'DELETE' }),
   getQrCode: (id: string) =>
     request<QrCodeResponse>(`/sellers/${id}/qrcode`),
   getConnectionStatus: (id: string) =>

@@ -103,4 +103,44 @@ export class RagService {
 
     logger.info(`Document upserted: ns=${namespace} id=${documentId}`);
   }
+
+  async listDocuments(namespace: string): Promise<{ id: string; text: string; metadata: Record<string, any> }[]> {
+    const ids: string[] = [];
+    let paginationToken: string | undefined;
+
+    do {
+      const page = await this.index.namespace(namespace).listPaginated({
+        limit: 100,
+        paginationToken,
+      });
+      if (page.vectors) {
+        ids.push(...page.vectors.map((v) => v.id!));
+      }
+      paginationToken = page.pagination?.next;
+    } while (paginationToken);
+
+    if (ids.length === 0) return [];
+
+    const fetched = await this.index.namespace(namespace).fetch({ ids });
+    const docs: { id: string; text: string; metadata: Record<string, any> }[] = [];
+
+    for (const [id, record] of Object.entries(fetched.records || {})) {
+      if (record?.metadata) {
+        const { text, ...rest } = record.metadata as Record<string, any>;
+        docs.push({ id, text: text || '', metadata: rest });
+      }
+    }
+
+    return docs;
+  }
+
+  async deleteDocument(namespace: string, documentId: string): Promise<void> {
+    await this.index.namespace(namespace).deleteOne({ id: documentId });
+    logger.info(`Document deleted: ns=${namespace} id=${documentId}`);
+  }
+
+  async deleteAllDocuments(namespace: string): Promise<void> {
+    await this.index.namespace(namespace).deleteAll();
+    logger.info(`All documents deleted: ns=${namespace}`);
+  }
 }
