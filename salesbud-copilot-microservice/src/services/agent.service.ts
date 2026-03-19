@@ -1,5 +1,5 @@
 import { injectable, inject } from 'tsyringe';
-import { ChatOpenAI } from '@langchain/openai';
+import { ChatOpenAI, type ChatOpenAIFields } from '@langchain/openai';
 import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages';
 import { createReactAgent } from '@langchain/langgraph/prebuilt';
 import { env } from '../config/env.js';
@@ -49,13 +49,13 @@ export class AgentService {
     ];
 
     const llm = new ChatOpenAI({
-      modelName: 'openai/gpt-4o',
+      model: 'openai/gpt-4o',
       temperature: 0.7,
+      apiKey: env.OPENROUTER_API_KEY,
       configuration: {
-        apiKey: env.OPENROUTER_API_KEY,
         baseURL: 'https://openrouter.ai/api/v1',
       },
-    });
+    } as ChatOpenAIFields);
 
     const agent = createReactAgent({ llm, tools });
 
