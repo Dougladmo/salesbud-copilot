@@ -16,7 +16,7 @@ export default function SellerSelect() {
 
   const handleSelect = (id: string) => {
     setSellerId(id);
-    navigate('/seller/agent');
+    navigate('/seller/copilot');
   };
 
   return (

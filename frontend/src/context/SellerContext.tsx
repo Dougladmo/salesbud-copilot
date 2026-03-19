@@ -6,6 +6,8 @@ interface SellerContextType {
   seller: Seller | null;
   setSellerId: (id: string | null) => void;
   reload: () => void;
+  /** Silently refresh seller data without showing loading state */
+  silentReload: () => void;
   loading: boolean;
 }
 
@@ -13,6 +15,7 @@ const SellerContext = createContext<SellerContextType>({
   seller: null,
   setSellerId: () => {},
   reload: () => {},
+  silentReload: () => {},
   loading: false,
 });
 
@@ -49,8 +52,16 @@ export function SellerProvider({ children }: { children: ReactNode }) {
     if (sellerId) load(sellerId);
   };
 
+  const silentReload = async () => {
+    if (!sellerId) return;
+    try {
+      const data = await sellers.get(sellerId);
+      setSeller(data);
+    } catch { /* keep current seller on silent reload failure */ }
+  };
+
   return (
-    <SellerContext.Provider value={{ seller, setSellerId, reload, loading }}>
+    <SellerContext.Provider value={{ seller, setSellerId, reload, silentReload, loading }}>
       {children}
     </SellerContext.Provider>
   );

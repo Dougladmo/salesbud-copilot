@@ -2,12 +2,6 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useSeller } from '../context/SellerContext';
 import { useEffect } from 'react';
 
-const navItems = [
-  { to: '/seller/agent', label: 'Meu Agente', icon: '🤖' },
-  { to: '/seller/whatsapp', label: 'WhatsApp', icon: '💬' },
-  { to: '/seller/documents', label: 'Documentos', icon: '📄' },
-];
-
 export default function SellerLayout() {
   const { seller, setSellerId, loading } = useSeller();
   const navigate = useNavigate();
@@ -43,31 +37,22 @@ export default function SellerLayout() {
               <p className="text-[11px] text-white/50 truncate">{seller.company?.name}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 mt-2 px-1">
-            <span className={`w-1.5 h-1.5 rounded-full ${seller.whatsappConnected ? 'bg-success' : 'bg-text-muted'}`}></span>
-            <span className="text-[10px] text-white/40">
-              {seller.whatsappConnected ? 'WhatsApp conectado' : 'WhatsApp desconectado'}
-            </span>
-          </div>
         </div>
 
         <nav className="flex flex-col gap-1 flex-1">
-          {navItems.map(({ to, label, icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-150 ${
-                  isActive
-                    ? 'bg-accent text-white'
-                    : 'text-white/60 hover:text-white hover:bg-white/10'
-                }`
-              }
-            >
-              <span>{icon}</span>
-              {label}
-            </NavLink>
-          ))}
+          <NavLink
+            to="/seller/copilot"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-150 ${
+                isActive
+                  ? 'bg-accent text-white'
+                  : 'text-white/60 hover:text-white hover:bg-white/10'
+              }`
+            }
+          >
+            <span>🤖</span>
+            Copilot
+          </NavLink>
         </nav>
 
         <div className="mt-auto space-y-2 pt-4 border-t border-white/10">

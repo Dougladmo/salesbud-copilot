@@ -3,9 +3,7 @@ import { SellerProvider } from './context/SellerContext';
 import SellerLayout from './components/SellerLayout';
 import AdminLayout from './components/AdminLayout';
 import SellerSelect from './pages/seller/SellerSelect';
-import AgentConfig from './pages/seller/AgentConfig';
-import WhatsApp from './pages/seller/WhatsApp';
-import SellerDocuments from './pages/seller/SellerDocuments';
+import Copilot from './pages/seller/Copilot';
 import Companies from './pages/admin/Companies';
 import Sellers from './pages/admin/Sellers';
 import Documents from './pages/admin/Documents';
@@ -20,10 +18,8 @@ export default function App() {
 
           {/* Seller area */}
           <Route path="/seller" element={<SellerLayout />}>
-            <Route index element={<Navigate to="/seller/agent" replace />} />
-            <Route path="agent" element={<AgentConfig />} />
-            <Route path="whatsapp" element={<WhatsApp />} />
-            <Route path="documents" element={<SellerDocuments />} />
+            <Route index element={<Navigate to="/seller/copilot" replace />} />
+            <Route path="copilot" element={<Copilot />} />
           </Route>
 
           {/* Admin area */}
