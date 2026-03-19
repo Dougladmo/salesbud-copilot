@@ -49,7 +49,7 @@ export class AgentService {
     ];
 
     const llm = new ChatOpenAI({
-      model: 'openai/gpt-4o',
+      model: 'deepseek/deepseek-v3.2',
       temperature: 0.7,
       apiKey: env.OPENROUTER_API_KEY,
       configuration: {
