@@ -47,11 +47,11 @@ export async function handleProcessBuffer(data: unknown): Promise<void> {
     if (textWithoutUrl) {
       await whatsappService.sendText(remoteJid, textWithoutUrl);
     }
-  } else if (response.length > seller.audioThreshold && seller.voiceId) {
+  } else if (response.length > 500 && seller.voiceId) {
     const audioBase64 = await ttsService.synthesize(response, seller.voiceId);
     await whatsappService.sendAudio(remoteJid, audioBase64);
   } else {
-    const delay = response.length * seller.timePerCharMs;
+    const delay = response.length * 50;
     await new Promise((resolve) => setTimeout(resolve, Math.min(delay, 10000)));
     await whatsappService.sendText(remoteJid, response);
   }

@@ -11,112 +11,6 @@ type Tab = 'config' | 'documents';
 /** Unique key to re-trigger CSS enter animation on tab switch */
 let tabKey = 0;
 
-interface TraitOption {
-  value: string;
-  label: string;
-  icon: string;
-  desc: string;
-}
-
-const traitConfig: {
-  key: string;
-  label: string;
-  options: [TraitOption, TraitOption];
-}[] = [
-  {
-    key: 'formality',
-    label: 'Formalidade',
-    options: [
-      { value: 'formal', label: 'Formal', icon: '🎩', desc: 'Tom profissional e sério' },
-      { value: 'informal', label: 'Informal', icon: '😎', desc: 'Tom descontraído e próximo' },
-    ],
-  },
-  {
-    key: 'humor',
-    label: 'Humor',
-    options: [
-      { value: 'humorous', label: 'Humorístico', icon: '😄', desc: 'Usa humor para engajar' },
-      { value: 'serious', label: 'Sério', icon: '📋', desc: 'Direto sem brincadeiras' },
-    ],
-  },
-  {
-    key: 'communication',
-    label: 'Comunicação',
-    options: [
-      { value: 'direct', label: 'Direto', icon: '⚡', desc: 'Respostas curtas e objetivas' },
-      { value: 'detailed', label: 'Detalhado', icon: '📖', desc: 'Explicações completas' },
-    ],
-  },
-  {
-    key: 'empathy',
-    label: 'Empatia',
-    options: [
-      { value: 'empathetic', label: 'Empático', icon: '💛', desc: 'Acolhedor e compreensivo' },
-      { value: 'objective', label: 'Objetivo', icon: '🎯', desc: 'Focado em fatos e dados' },
-    ],
-  },
-  {
-    key: 'selling',
-    label: 'Estilo de Venda',
-    options: [
-      { value: 'consultive', label: 'Consultivo', icon: '🤝', desc: 'Guia o cliente com perguntas' },
-      { value: 'aggressive', label: 'Agressivo', icon: '🚀', desc: 'Foco em fechamento rápido' },
-    ],
-  },
-];
-
-function TraitCard({
-  trait,
-  value,
-  onChange,
-  index,
-}: {
-  trait: (typeof traitConfig)[number];
-  value: string;
-  onChange: (v: string) => void;
-  index: number;
-}) {
-  return (
-    <div
-      className="animate-fade-in-up"
-      style={{ animationDelay: `${index * 60}ms` }}
-    >
-      <p className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">{trait.label}</p>
-      <div className="grid grid-cols-2 gap-2">
-        {trait.options.map((opt) => {
-          const active = value === opt.value;
-          return (
-            <button
-              type="button"
-              key={opt.value}
-              onClick={() => onChange(opt.value)}
-              title={opt.desc}
-              className={`group relative rounded-xl border-2 p-3 text-left transition-all duration-200 cursor-pointer flex flex-col ${
-                active
-                  ? 'border-accent bg-accent/5 shadow-sm shadow-accent/10'
-                  : 'border-border bg-white hover:border-navy/30 hover:shadow-sm'
-              }`}
-            >
-              <span className="text-lg mb-1">{opt.icon}</span>
-              <span
-                className={`text-sm font-semibold transition-colors duration-200 ${
-                  active ? 'text-accent' : 'text-navy group-hover:text-navy-light'
-                }`}
-              >
-                {opt.label}
-              </span>
-              <span className="text-[11px] text-text-muted leading-tight mt-1 line-clamp-1">{opt.desc}</span>
-              {active && (
-                <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-accent animate-pulse" />
-              )}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 function StatusBanner({ status, onDismiss }: { status: { type: 'success' | 'error'; msg: string }; onDismiss: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -160,11 +54,6 @@ export default function Copilot() {
   const [saving, setSaving] = useState(false);
   const [configStatus, setConfigStatus] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
   const [agentName, setAgentName] = useState('');
-  const [traitFormality, setTraitFormality] = useState('informal');
-  const [traitHumor, setTraitHumor] = useState('humorous');
-  const [traitCommunication, setTraitCommunication] = useState('direct');
-  const [traitEmpathy, setTraitEmpathy] = useState('empathetic');
-  const [traitSelling, setTraitSelling] = useState('consultive');
   const [voiceId, setVoiceId] = useState('');
 
   // Documents state
@@ -175,30 +64,9 @@ export default function Copilot() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [docStatus, setDocStatus] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
 
-  const traitSetters: Record<string, (v: string) => void> = {
-    formality: setTraitFormality,
-    humor: setTraitHumor,
-    communication: setTraitCommunication,
-    empathy: setTraitEmpathy,
-    selling: setTraitSelling,
-  };
-
-  const traitValues: Record<string, string> = {
-    formality: traitFormality,
-    humor: traitHumor,
-    communication: traitCommunication,
-    empathy: traitEmpathy,
-    selling: traitSelling,
-  };
-
   useEffect(() => {
     if (!seller) return;
     setAgentName(seller.agentName);
-    setTraitFormality(seller.traitFormality);
-    setTraitHumor(seller.traitHumor);
-    setTraitCommunication(seller.traitCommunication);
-    setTraitEmpathy(seller.traitEmpathy);
-    setTraitSelling(seller.traitSelling);
     setVoiceId(seller.voiceId || '');
   }, [seller]);
 
@@ -243,11 +111,6 @@ export default function Copilot() {
     try {
       await sellers.update(seller.id, {
         agentName,
-        traitFormality: traitFormality as 'formal' | 'informal',
-        traitHumor: traitHumor as 'humorous' | 'serious',
-        traitCommunication: traitCommunication as 'direct' | 'detailed',
-        traitEmpathy: traitEmpathy as 'empathetic' | 'objective',
-        traitSelling: traitSelling as 'consultive' | 'aggressive',
         voiceId: voiceId || undefined,
       });
       setConfigStatus({ type: 'success', msg: 'Configurações salvas!' });
@@ -336,7 +199,6 @@ export default function Copilot() {
 
       {/* Tabs */}
       <div className="relative flex gap-1 bg-surface border border-border rounded-xl p-1 mb-8">
-        {/* Animated sliding indicator */}
         <span
           className="absolute top-1 bottom-1 rounded-lg bg-white shadow-md transition-all duration-300 ease-out"
           style={{
@@ -385,46 +247,13 @@ export default function Copilot() {
                   <label className="text-xs font-semibold text-text-muted uppercase tracking-wide">
                     Voice ID (ElevenLabs)
                   </label>
-                  <input className={inputCls} value={voiceId} onChange={(e) => setVoiceId(e.target.value)} placeholder="Opcional" />
+                  <input className={inputCls} value={voiceId} onChange={(e) => setVoiceId(e.target.value)} placeholder="Opcional — habilita respostas em áudio" />
                 </div>
               </div>
             </section>
 
-            {/* Personality Section */}
-            <section
-              className="bg-white border border-border rounded-2xl p-6 shadow-sm animate-fade-in-up"
-              style={{ animationDelay: '80ms' }}
-            >
-              <div className="flex items-center gap-2 mb-5">
-                <span className="text-lg">🎭</span>
-                <h3 className="text-sm font-bold text-navy">Personalidade</h3>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-5 gap-y-6">
-                {traitConfig.slice(0, 3).map((trait, i) => (
-                  <TraitCard
-                    key={trait.key}
-                    trait={trait}
-                    value={traitValues[trait.key]}
-                    onChange={(v) => traitSetters[trait.key](v)}
-                    index={i}
-                  />
-                ))}
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-6 mt-6 lg:max-w-[66%]">
-                {traitConfig.slice(3).map((trait, i) => (
-                  <TraitCard
-                    key={trait.key}
-                    trait={trait}
-                    value={traitValues[trait.key]}
-                    onChange={(v) => traitSetters[trait.key](v)}
-                    index={i + 3}
-                  />
-                ))}
-              </div>
-            </section>
-
             {/* Save Button */}
-            <div className="flex justify-end animate-fade-in-up" style={{ animationDelay: '160ms' }}>
+            <div className="flex justify-end animate-fade-in-up" style={{ animationDelay: '80ms' }}>
               <button
                 type="submit"
                 disabled={saving}

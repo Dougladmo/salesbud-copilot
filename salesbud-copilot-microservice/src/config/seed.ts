@@ -8,16 +8,9 @@ const SEED_COMPANY = {
   pineconeNamespace: 'salesbud-demo',
 };
 
-import { TraitFormality, TraitHumor, TraitCommunication, TraitEmpathy, TraitSelling } from '../models/seller.model.js';
-
 const SEED_SELLER = {
   name: 'Douglas Moura',
   agentName: 'Douglas',
-  traitFormality: TraitFormality.INFORMAL,
-  traitHumor: TraitHumor.HUMOROUS,
-  traitCommunication: TraitCommunication.DIRECT,
-  traitEmpathy: TraitEmpathy.EMPATHETIC,
-  traitSelling: TraitSelling.CONSULTIVE,
 };
 
 export async function seedDatabase(): Promise<void> {

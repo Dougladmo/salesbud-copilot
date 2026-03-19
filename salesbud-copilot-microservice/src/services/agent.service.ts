@@ -36,7 +36,8 @@ export class AgentService {
       logger.warn(`Potential prompt injection detected: seller=${sellerId} threats=${threats.join(', ')}`);
     }
 
-    const history = await this.loadMemory(memoryKey);
+    const maxMessages = seller.maxMemoryMessages ?? 200;
+    const history = await this.loadMemory(memoryKey, maxMessages);
 
     const tools = [
       createRagSearchTool(
@@ -74,12 +75,7 @@ export class AgentService {
           : JSON.stringify(lastMessage.content);
       const responseText = sanitizeOutput(rawResponse);
 
-      await this.saveMemory(
-        memoryKey,
-        safeMessage,
-        responseText,
-        seller.maxMemoryMessages,
-      );
+      await this.saveMemory(memoryKey, safeMessage, responseText, maxMessages);
 
       logger.info(`Agent response generated: seller=${sellerId} length=${responseText.length}`);
       return responseText;
@@ -89,8 +85,8 @@ export class AgentService {
     }
   }
 
-  private async loadMemory(key: string): Promise<(HumanMessage | AIMessage)[]> {
-    const raw = await redis.lrange(key, 0, -1);
+  private async loadMemory(key: string, maxMessages: number): Promise<(HumanMessage | AIMessage)[]> {
+    const raw = await redis.lrange(key, -maxMessages, -1);
     return raw.map((entry) => {
       const parsed = JSON.parse(entry);
       if (parsed.role === 'human') return new HumanMessage(parsed.content);
@@ -109,6 +105,6 @@ export class AgentService {
       JSON.stringify({ role: 'human', content: userMsg }),
       JSON.stringify({ role: 'ai', content: aiMsg }),
     );
-    await redis.ltrim(key, -(maxMessages * 2), -1);
+    await redis.ltrim(key, -maxMessages, -1);
   }
 }
