@@ -367,7 +367,7 @@ export default function Copilot() {
           {/* Seller Documents */}
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wide">
-              Documentos do Copilot
+              Documentos do seu Copilot
             </h3>
             <span className="text-xs font-semibold text-accent bg-accent/10 px-2.5 py-1 rounded-full">
               {documents.length} {documents.length === 1 ? 'documento' : 'documentos'}
