@@ -4,7 +4,6 @@ export const createSellerSchema = z.object({
   companyId: z.string().uuid(),
   name: z.string().min(1),
   agentName: z.string().min(1),
-  evolutionInstance: z.string().min(1),
   pineconeNamespace: z.string().optional(),
   traitFormality: z.enum(['formal', 'informal']).optional(),
   traitHumor: z.enum(['humorous', 'serious']).optional(),

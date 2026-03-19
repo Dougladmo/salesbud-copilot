@@ -25,6 +25,12 @@ export const webhookController = {
     const messageBufferService = container.resolve(MessageBufferService);
 
     const seller = await sellerService.findOne(sellerId);
+
+    if (!seller.isActive) {
+      res.json({ status: 'copilot_disabled' });
+      return;
+    }
+
     const { remoteJid } = data.key;
 
     let text: string | null = null;

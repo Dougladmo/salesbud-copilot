@@ -65,8 +65,9 @@ docker compose up -d   # PostgreSQL 17, Redis 7, RabbitMQ 4 (with management UI 
 ### Data Model
 
 - **Company** → has many **Sellers** → has many **Leads**
-- Company holds Evolution API credentials and a Pinecone namespace for company-wide knowledge
-- Seller has personality trait enums, an optional Pinecone namespace for seller-specific knowledge, voice config, and timing settings
+- Company holds a Pinecone namespace for company-wide knowledge
+- Seller has personality trait enums, an optional Pinecone namespace for seller-specific knowledge, voice config, timing settings, and a dynamic Evolution API instance (auto-created)
+- Evolution API credentials are global (env vars `EVOLUTION_API_URL`, `EVOLUTION_API_KEY`), instances are per-seller
 
 ### Frontend
 
@@ -77,8 +78,8 @@ docker compose up -d   # PostgreSQL 17, Redis 7, RabbitMQ 4 (with management UI 
 
 ## Environment Variables (Backend)
 
-Required: `DATABASE_URL`, `OPENAI_API_KEY`, `PINECONE_API_KEY`
-Optional with defaults: `PORT` (3000), `REDIS_URL`, `RABBITMQ_URL`, `PINECONE_INDEX` (salesbud-sdr), `ELEVENLABS_API_KEY`
+Required: `DATABASE_URL`, `OPENROUTER_API_KEY`, `PINECONE_API_KEY`, `EVOLUTION_API_URL`, `EVOLUTION_API_KEY`
+Optional with defaults: `PORT` (3000), `REDIS_URL`, `RABBITMQ_URL`, `PINECONE_INDEX` (salesbud-sdr), `ELEVENLABS_API_KEY`, `WEBHOOK_BASE_URL`
 
 See `.env.example` in the microservice directory.
 

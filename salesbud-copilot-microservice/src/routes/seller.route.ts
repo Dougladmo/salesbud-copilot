@@ -13,4 +13,10 @@ router.get('/:id', uuidParam('id'), catchAsync(sellerController.findOne));
 router.patch('/:id', uuidParam('id'), validate(updateSellerSchema), catchAsync(sellerController.update));
 router.delete('/:id', uuidParam('id'), catchAsync(sellerController.remove));
 
+// WhatsApp instance management
+router.get('/:id/qrcode', uuidParam('id'), catchAsync(sellerController.qrCode));
+router.get('/:id/status', uuidParam('id'), catchAsync(sellerController.connectionStatus));
+router.post('/:id/restart', uuidParam('id'), catchAsync(sellerController.restart));
+router.post('/:id/logout', uuidParam('id'), catchAsync(sellerController.logout));
+
 export { router as sellerRoutes };

@@ -2,8 +2,6 @@ export interface Company {
   id: string;
   name: string;
   pineconeNamespace: string;
-  evolutionApiUrl: string;
-  evolutionApiKey: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -11,8 +9,6 @@ export interface Company {
 export interface CreateCompanyDto {
   name: string;
   pineconeNamespace: string;
-  evolutionApiUrl: string;
-  evolutionApiKey: string;
 }
 
 export type TraitFormality = 'formal' | 'informal';
@@ -28,6 +24,7 @@ export interface Seller {
   name: string;
   agentName: string;
   evolutionInstance: string;
+  whatsappConnected: boolean;
   pineconeNamespace: string | null;
   traitFormality: TraitFormality;
   traitHumor: TraitHumor;
@@ -49,7 +46,6 @@ export interface CreateSellerDto {
   companyId: string;
   name: string;
   agentName: string;
-  evolutionInstance: string;
   pineconeNamespace?: string;
   traitFormality?: TraitFormality;
   traitHumor?: TraitHumor;
@@ -65,3 +61,13 @@ export interface CreateSellerDto {
   isActive?: boolean;
 }
 
+export interface QrCodeResponse {
+  base64?: string;
+  code?: string;
+  status?: string;
+}
+
+export interface ConnectionStatus {
+  connected: boolean;
+  number?: string;
+}

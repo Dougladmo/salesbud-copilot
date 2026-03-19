@@ -1,12 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { sellers, companies } from '../api/client';
-import type { Seller, CreateSellerDto, Company } from '../types';
+import type { Seller, CreateSellerDto, Company, QrCodeResponse } from '../types';
 
 const empty: CreateSellerDto = {
   companyId: '',
   name: '',
   agentName: '',
-  evolutionInstance: '',
 };
 
 export default function Sellers() {
@@ -16,6 +15,11 @@ export default function Sellers() {
   const [editId, setEditId] = useState<string | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [error, setError] = useState('');
+
+  // QR Code modal state
+  const [qrSeller, setQrSeller] = useState<Seller | null>(null);
+  const [qrData, setQrData] = useState<QrCodeResponse | null>(null);
+  const [qrLoading, setQrLoading] = useState(false);
 
   const load = () => {
     sellers.list().then(setList).catch((e) => setError(e.message));
@@ -50,7 +54,6 @@ export default function Sellers() {
       companyId: s.companyId,
       name: s.name,
       agentName: s.agentName,
-      evolutionInstance: s.evolutionInstance,
       pineconeNamespace: s.pineconeNamespace || undefined,
       traitFormality: s.traitFormality,
       traitHumor: s.traitHumor,
@@ -68,10 +71,73 @@ export default function Sellers() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Tem certeza que deseja excluir?')) return;
+    if (!confirm('Tem certeza que deseja excluir? A instância WhatsApp será removida.')) return;
     await sellers.delete(id);
     load();
   };
+
+  const toggleCopilot = async (s: Seller) => {
+    try {
+      await sellers.toggleActive(s.id, !s.isActive);
+      load();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro ao alterar status');
+    }
+  };
+
+  const openQrModal = useCallback(async (s: Seller) => {
+    setQrSeller(s);
+    setQrLoading(true);
+    setQrData(null);
+    try {
+      const data = await sellers.getQrCode(s.id);
+      setQrData(data);
+    } catch {
+      setQrData({ status: 'error' });
+    }
+    setQrLoading(false);
+  }, []);
+
+  const refreshQr = useCallback(async () => {
+    if (!qrSeller) return;
+    setQrLoading(true);
+    try {
+      const data = await sellers.getQrCode(qrSeller.id);
+      setQrData(data);
+    } catch {
+      setQrData({ status: 'error' });
+    }
+    setQrLoading(false);
+  }, [qrSeller]);
+
+  const checkStatus = useCallback(async () => {
+    if (!qrSeller) return;
+    try {
+      const status = await sellers.getConnectionStatus(qrSeller.id);
+      if (status.connected) {
+        setQrSeller(null);
+        setQrData(null);
+        load();
+      }
+    } catch { /* ignore */ }
+  }, [qrSeller]);
+
+  const disconnectWhatsApp = async (s: Seller) => {
+    if (!confirm('Desconectar WhatsApp deste vendedor?')) return;
+    try {
+      await sellers.logout(s.id);
+      load();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro ao desconectar');
+    }
+  };
+
+  // Auto-check connection status while QR modal is open
+  useEffect(() => {
+    if (!qrSeller || qrData?.status === 'already_connected') return;
+    const interval = setInterval(checkStatus, 3000);
+    return () => clearInterval(interval);
+  }, [qrSeller, qrData, checkStatus]);
 
   const traitLabel: Record<string, string> = {
     formal: 'Formal', informal: 'Informal',
@@ -110,10 +176,6 @@ export default function Sellers() {
           <label>
             Nome do Agente
             <input value={form.agentName} onChange={(e) => setForm({ ...form, agentName: e.target.value })} required />
-          </label>
-          <label>
-            Instância Evolution
-            <input value={form.evolutionInstance} onChange={(e) => setForm({ ...form, evolutionInstance: e.target.value })} required />
           </label>
         </div>
 
@@ -171,13 +233,6 @@ export default function Sellers() {
                   <option value="aggressive">Agressivo</option>
                 </select>
               </label>
-              <label>
-                Ativo
-                <select value={form.isActive === false ? 'false' : 'true'} onChange={(e) => setForm({ ...form, isActive: e.target.value === 'true' })}>
-                  <option value="true">Sim</option>
-                  <option value="false">Não</option>
-                </select>
-              </label>
             </div>
 
             <h4>Configurações de Timing</h4>
@@ -227,8 +282,9 @@ export default function Sellers() {
             <th>Nome</th>
             <th>Agente</th>
             <th>Empresa</th>
+            <th>WhatsApp</th>
+            <th>Copilot</th>
             <th>Personalidade</th>
-            <th>Status</th>
             <th>Ações</th>
           </tr>
         </thead>
@@ -238,15 +294,30 @@ export default function Sellers() {
               <td>{s.name}</td>
               <td>{s.agentName}</td>
               <td>{s.company?.name || s.companyId.slice(0, 8)}</td>
+              <td>
+                {s.whatsappConnected ? (
+                  <span className="badge badge-active" title="Conectado" style={{ cursor: 'pointer' }} onClick={() => disconnectWhatsApp(s)}>
+                    Conectado
+                  </span>
+                ) : (
+                  <button className="btn-sm btn-connect" onClick={() => openQrModal(s)}>
+                    Conectar
+                  </button>
+                )}
+              </td>
+              <td>
+                <button
+                  className={`btn-toggle ${s.isActive ? 'btn-toggle-on' : 'btn-toggle-off'}`}
+                  onClick={() => toggleCopilot(s)}
+                  title={s.isActive ? 'Clique para desligar' : 'Clique para ligar'}
+                >
+                  {s.isActive ? 'ON' : 'OFF'}
+                </button>
+              </td>
               <td className="traits">
                 <span className="tag">{traitLabel[s.traitFormality]}</span>
                 <span className="tag">{traitLabel[s.traitHumor]}</span>
                 <span className="tag">{traitLabel[s.traitSelling]}</span>
-              </td>
-              <td>
-                <span className={`badge ${s.isActive ? 'badge-active' : 'badge-inactive'}`}>
-                  {s.isActive ? 'Ativo' : 'Inativo'}
-                </span>
               </td>
               <td className="actions">
                 <button className="btn-sm" onClick={() => startEdit(s)}>Editar</button>
@@ -255,10 +326,41 @@ export default function Sellers() {
             </tr>
           ))}
           {list.length === 0 && (
-            <tr><td colSpan={6} className="empty">Nenhum vendedor cadastrado</td></tr>
+            <tr><td colSpan={7} className="empty">Nenhum vendedor cadastrado</td></tr>
           )}
         </tbody>
       </table>
+
+      {/* QR Code Modal */}
+      {qrSeller && (
+        <div className="modal-overlay" onClick={() => { setQrSeller(null); setQrData(null); }}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Conectar WhatsApp — {qrSeller.name}</h3>
+            <p className="modal-subtitle">Escaneie o QR Code com o WhatsApp do vendedor</p>
+
+            <div className="qr-container">
+              {qrLoading && <div className="qr-loading">Carregando...</div>}
+              {!qrLoading && qrData?.base64 && (
+                <img src={qrData.base64} alt="QR Code WhatsApp" className="qr-image" />
+              )}
+              {!qrLoading && qrData?.status === 'already_connected' && (
+                <div className="qr-connected">WhatsApp já conectado!</div>
+              )}
+              {!qrLoading && qrData?.status === 'error' && (
+                <div className="qr-error">Erro ao gerar QR Code</div>
+              )}
+              {!qrLoading && !qrData?.base64 && !qrData?.status && (
+                <div className="qr-error">QR Code não disponível</div>
+              )}
+            </div>
+
+            <div className="modal-actions">
+              <button onClick={refreshQr} disabled={qrLoading}>Atualizar QR Code</button>
+              <button className="btn-secondary" onClick={() => { setQrSeller(null); setQrData(null); }}>Fechar</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

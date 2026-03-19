@@ -345,3 +345,116 @@ code {
   margin-bottom: 16px;
   font-size: 0.85rem;
 }
+
+/* Toggle Button */
+.btn-toggle {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 48px;
+}
+
+.btn-toggle-on {
+  background: var(--success);
+  color: #fff;
+}
+
+.btn-toggle-on:hover {
+  background: #059669;
+}
+
+.btn-toggle-off {
+  background: var(--text-muted);
+  color: #fff;
+}
+
+.btn-toggle-off:hover {
+  background: #6b7280;
+}
+
+/* Connect Button */
+.btn-connect {
+  background: #f59e0b;
+  color: #000;
+  font-weight: 600;
+}
+
+.btn-connect:hover {
+  background: #fbbf24;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px;
+  max-width: 420px;
+  width: 90%;
+  text-align: center;
+}
+
+.modal h3 {
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.modal-subtitle {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-bottom: 20px;
+}
+
+.qr-container {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 0 auto 20px;
+  min-height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 300px;
+}
+
+.qr-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.qr-loading {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.qr-connected {
+  color: var(--success);
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.qr-error {
+  color: var(--danger);
+  font-size: 0.9rem;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}

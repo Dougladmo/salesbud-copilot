@@ -9,7 +9,10 @@ export class TranscriptionService {
   private readonly openai: OpenAI;
 
   constructor() {
-    this.openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
+    this.openai = new OpenAI({
+      apiKey: env.OPENROUTER_API_KEY,
+      baseURL: 'https://openrouter.ai/api/v1',
+    });
   }
 
   async transcribeAudio(audioUrl: string): Promise<string> {
@@ -23,7 +26,7 @@ export class TranscriptionService {
       );
 
       const transcription = await this.openai.audio.transcriptions.create({
-        model: 'whisper-1',
+        model: 'openai/whisper-1',
         file,
       });
 
@@ -38,7 +41,7 @@ export class TranscriptionService {
   async describeImage(imageUrl: string): Promise<string> {
     try {
       const response = await this.openai.chat.completions.create({
-        model: 'gpt-4o',
+        model: 'openai/gpt-4o',
         messages: [
           {
             role: 'user',

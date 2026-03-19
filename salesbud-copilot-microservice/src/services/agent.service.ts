@@ -41,9 +41,12 @@ export class AgentService {
     ];
 
     const llm = new ChatOpenAI({
-      modelName: 'gpt-4o',
-      openAIApiKey: env.OPENAI_API_KEY,
+      modelName: 'openai/gpt-4o',
+      openAIApiKey: env.OPENROUTER_API_KEY,
       temperature: 0.7,
+      configuration: {
+        baseURL: 'https://openrouter.ai/api/v1',
+      },
     });
 
     const agent = createReactAgent({ llm, tools });

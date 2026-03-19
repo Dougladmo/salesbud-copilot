@@ -33,4 +33,32 @@ export const sellerController = {
     await service.remove(param(req, 'id'));
     res.status(204).send();
   },
+
+  async qrCode(req: Request, res: Response) {
+    const service = container.resolve(SellerService);
+    const qr = await service.getQrCode(param(req, 'id'));
+    if (!qr) {
+      res.json({ status: 'already_connected' });
+      return;
+    }
+    res.json(qr);
+  },
+
+  async connectionStatus(req: Request, res: Response) {
+    const service = container.resolve(SellerService);
+    const status = await service.getConnectionStatus(param(req, 'id'));
+    res.json(status);
+  },
+
+  async restart(req: Request, res: Response) {
+    const service = container.resolve(SellerService);
+    await service.restartInstance(param(req, 'id'));
+    res.json({ status: 'restarted' });
+  },
+
+  async logout(req: Request, res: Response) {
+    const service = container.resolve(SellerService);
+    await service.logoutInstance(param(req, 'id'));
+    res.json({ status: 'disconnected' });
+  },
 };

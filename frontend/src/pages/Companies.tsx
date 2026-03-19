@@ -5,8 +5,6 @@ import type { Company, CreateCompanyDto } from '../types';
 const empty: CreateCompanyDto = {
   name: '',
   pineconeNamespace: '',
-  evolutionApiUrl: '',
-  evolutionApiKey: '',
 };
 
 export default function Companies() {
@@ -41,8 +39,6 @@ export default function Companies() {
     setForm({
       name: c.name,
       pineconeNamespace: c.pineconeNamespace,
-      evolutionApiUrl: c.evolutionApiUrl,
-      evolutionApiKey: c.evolutionApiKey,
     });
   };
 
@@ -68,14 +64,6 @@ export default function Companies() {
             Pinecone Namespace
             <input value={form.pineconeNamespace} onChange={(e) => setForm({ ...form, pineconeNamespace: e.target.value })} required />
           </label>
-          <label>
-            Evolution API URL
-            <input value={form.evolutionApiUrl} onChange={(e) => setForm({ ...form, evolutionApiUrl: e.target.value })} required />
-          </label>
-          <label>
-            Evolution API Key
-            <input value={form.evolutionApiKey} onChange={(e) => setForm({ ...form, evolutionApiKey: e.target.value })} required />
-          </label>
         </div>
         <div className="form-actions">
           <button type="submit">{editId ? 'Salvar' : 'Criar'}</button>
@@ -92,7 +80,7 @@ export default function Companies() {
           <tr>
             <th>Nome</th>
             <th>Namespace</th>
-            <th>Evolution URL</th>
+            <th>Vendedores</th>
             <th>Ações</th>
           </tr>
         </thead>
@@ -101,7 +89,7 @@ export default function Companies() {
             <tr key={c.id}>
               <td>{c.name}</td>
               <td><code>{c.pineconeNamespace}</code></td>
-              <td className="truncate">{c.evolutionApiUrl}</td>
+              <td>-</td>
               <td className="actions">
                 <button className="btn-sm" onClick={() => startEdit(c)}>Editar</button>
                 <button className="btn-sm btn-danger" onClick={() => handleDelete(c.id)}>Excluir</button>

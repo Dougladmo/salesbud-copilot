@@ -13,23 +13,26 @@ export class Seller {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'company_id' })
+  @Column({ type: 'uuid', name: 'company_id' })
   companyId: string;
 
   @ManyToOne(() => Company, (company) => company.sellers)
   @JoinColumn({ name: 'company_id' })
   company: Company;
 
-  @Column()
+  @Column({ type: 'varchar' })
   name: string;
 
-  @Column({ name: 'agent_name' })
+  @Column({ type: 'varchar', name: 'agent_name' })
   agentName: string;
 
-  @Column({ name: 'evolution_instance' })
+  @Column({ type: 'varchar', name: 'evolution_instance' })
   evolutionInstance: string;
 
-  @Column({ name: 'pinecone_namespace', nullable: true })
+  @Column({ type: 'boolean', name: 'whatsapp_connected', default: false })
+  whatsappConnected: boolean;
+
+  @Column({ type: 'varchar', name: 'pinecone_namespace', nullable: true })
   pineconeNamespace: string | null;
 
   @Column({ type: 'enum', enum: TraitFormality, name: 'trait_formality', default: TraitFormality.INFORMAL })
@@ -50,22 +53,22 @@ export class Seller {
   @Column({ name: 'custom_prompt', type: 'text', nullable: true })
   customPrompt: string | null;
 
-  @Column({ name: 'voice_id', nullable: true })
+  @Column({ type: 'varchar', name: 'voice_id', nullable: true })
   voiceId: string | null;
 
-  @Column({ name: 'timeout_ms', default: 5000 })
+  @Column({ type: 'int', name: 'timeout_ms', default: 5000 })
   timeoutMs: number;
 
-  @Column({ name: 'time_per_char_ms', default: 50 })
+  @Column({ type: 'int', name: 'time_per_char_ms', default: 50 })
   timePerCharMs: number;
 
-  @Column({ name: 'max_memory_messages', default: 7 })
+  @Column({ type: 'int', name: 'max_memory_messages', default: 7 })
   maxMemoryMessages: number;
 
-  @Column({ name: 'audio_threshold', default: 500 })
+  @Column({ type: 'int', name: 'audio_threshold', default: 500 })
   audioThreshold: number;
 
-  @Column({ name: 'is_active', default: true })
+  @Column({ type: 'boolean', name: 'is_active', default: true })
   isActive: boolean;
 
   @CreateDateColumn({ name: 'created_at' })

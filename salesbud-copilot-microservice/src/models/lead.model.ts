@@ -16,20 +16,20 @@ export class Lead {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'seller_id' })
+  @Column({ type: 'uuid', name: 'seller_id' })
   sellerId: string;
 
   @ManyToOne(() => Seller, (seller) => seller.leads)
   @JoinColumn({ name: 'seller_id' })
   seller: Seller;
 
-  @Column({ name: 'remote_jid' })
+  @Column({ type: 'varchar', name: 'remote_jid' })
   remoteJid: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   name: string | null;
 
-  @Column()
+  @Column({ type: 'varchar' })
   phone: string;
 
   @Column({ type: 'enum', enum: LeadStatus, default: LeadStatus.NEW })

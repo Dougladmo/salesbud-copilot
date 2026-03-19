@@ -6,10 +6,12 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
   REDIS_URL: z.string().default('redis://localhost:6379'),
   RABBITMQ_URL: z.string().default('amqp://localhost:5672'),
-  OPENAI_API_KEY: z.string().min(1),
+  OPENROUTER_API_KEY: z.string().min(1),
   PINECONE_API_KEY: z.string().min(1),
   PINECONE_INDEX: z.string().default('salesbud-sdr'),
   ELEVENLABS_API_KEY: z.string().default(''),
+  EVOLUTION_API_URL: z.string().default('http://localhost:8080'),
+  EVOLUTION_API_KEY: z.string().default(''),
 });
 
 export type Env = z.infer<typeof envSchema>;

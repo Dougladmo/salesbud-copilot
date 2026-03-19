@@ -6,17 +6,11 @@ export class Company {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   name: string;
 
-  @Column({ name: 'pinecone_namespace' })
+  @Column({ type: 'varchar', name: 'pinecone_namespace' })
   pineconeNamespace: string;
-
-  @Column({ name: 'evolution_api_url' })
-  evolutionApiUrl: string;
-
-  @Column({ name: 'evolution_api_key' })
-  evolutionApiKey: string;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

@@ -19,13 +19,16 @@ export class RagService {
   constructor() {
     this.pinecone = new Pinecone({ apiKey: env.PINECONE_API_KEY });
     this.index = this.pinecone.Index(env.PINECONE_INDEX);
-    this.openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
-    logger.info('Pinecone and OpenAI initialized');
+    this.openai = new OpenAI({
+      apiKey: env.OPENROUTER_API_KEY,
+      baseURL: 'https://openrouter.ai/api/v1',
+    });
+    logger.info('Pinecone and OpenRouter initialized');
   }
 
   async generateEmbedding(text: string): Promise<number[]> {
     const response = await this.openai.embeddings.create({
-      model: 'text-embedding-3-small',
+      model: 'openai/text-embedding-3-small',
       input: text,
     });
     return response.data[0].embedding;

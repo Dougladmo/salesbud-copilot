@@ -16,12 +16,13 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return res.json();
 }
 
-// Companies
 import type {
   Company,
   CreateCompanyDto,
   Seller,
   CreateSellerDto,
+  QrCodeResponse,
+  ConnectionStatus,
 } from '../types';
 
 export const companies = {
@@ -54,5 +55,14 @@ export const sellers = {
       `/sellers/${sellerId}/documents`,
       { method: 'POST', body: JSON.stringify({ text, metadata }) },
     ),
+  getQrCode: (id: string) =>
+    request<QrCodeResponse>(`/sellers/${id}/qrcode`),
+  getConnectionStatus: (id: string) =>
+    request<ConnectionStatus>(`/sellers/${id}/status`),
+  restart: (id: string) =>
+    request<{ status: string }>(`/sellers/${id}/restart`, { method: 'POST' }),
+  logout: (id: string) =>
+    request<{ status: string }>(`/sellers/${id}/logout`, { method: 'POST' }),
+  toggleActive: (id: string, isActive: boolean) =>
+    request<Seller>(`/sellers/${id}`, { method: 'PATCH', body: JSON.stringify({ isActive }) }),
 };
-
