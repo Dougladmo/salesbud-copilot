@@ -72,19 +72,9 @@ export default function WhatsApp() {
         <div className="bg-danger/10 border border-danger text-danger px-4 py-3 rounded-lg mb-4 text-sm">{error}</div>
       )}
 
-      {/* Connection Status */}
+      {/* Connection Actions */}
       <section className="bg-surface border border-border rounded-xl p-5 mb-6">
-        <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-4">Status da Conexão</h3>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className={`w-3 h-3 rounded-full ${seller.whatsappConnected ? 'bg-success' : 'bg-text-muted'}`}></span>
-            <div>
-              <p className="text-sm font-medium text-navy">
-                {seller.whatsappConnected ? 'Conectado' : 'Desconectado'}
-              </p>
-              <p className="text-xs text-text-muted">Instância: {seller.evolutionInstance}</p>
-            </div>
-          </div>
+        <div className="flex items-center justify-end">
           {seller.whatsappConnected ? (
             <button
               onClick={handleDisconnect}
