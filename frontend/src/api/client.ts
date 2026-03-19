@@ -21,8 +21,6 @@ import type {
   CreateCompanyDto,
   Seller,
   CreateSellerDto,
-  QrCodeResponse,
-  ConnectionStatus,
 } from '../types';
 
 export interface DocumentRecord {
@@ -69,14 +67,6 @@ export const sellers = {
     ),
   deleteDocument: (sellerId: string, documentId: string) =>
     request<void>(`/sellers/${sellerId}/documents/${documentId}`, { method: 'DELETE' }),
-  getQrCode: (id: string) =>
-    request<QrCodeResponse>(`/sellers/${id}/qrcode`),
-  getConnectionStatus: (id: string) =>
-    request<ConnectionStatus>(`/sellers/${id}/status`),
-  restart: (id: string) =>
-    request<{ status: string }>(`/sellers/${id}/restart`, { method: 'POST' }),
-  logout: (id: string) =>
-    request<{ status: string }>(`/sellers/${id}/logout`, { method: 'POST' }),
   toggleActive: (id: string, isActive: boolean) =>
     request<Seller>(`/sellers/${id}`, { method: 'PATCH', body: JSON.stringify({ isActive }) }),
 };

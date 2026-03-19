@@ -23,8 +23,6 @@ export interface Seller {
   company?: Company;
   name: string;
   agentName: string;
-  evolutionInstance: string;
-  whatsappConnected: boolean;
   pineconeNamespace: string | null;
   traitFormality: TraitFormality;
   traitHumor: TraitHumor;
@@ -61,13 +59,3 @@ export interface CreateSellerDto {
   isActive?: boolean;
 }
 
-export interface QrCodeResponse {
-  base64?: string;
-  code?: string;
-  status?: string;
-}
-
-export interface ConnectionStatus {
-  connected: boolean;
-  number?: string;
-}

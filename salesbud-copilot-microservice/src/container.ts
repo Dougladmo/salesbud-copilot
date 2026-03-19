@@ -8,10 +8,8 @@ import { AgentService } from './services/agent.service.js';
 import { MessageBufferService } from './services/message-buffer.service.js';
 import { TranscriptionService } from './services/transcription.service.js';
 import { TtsService } from './services/tts.service.js';
-import { EvolutionService } from './services/evolution.service.js';
 import { WhatsappService } from './services/whatsapp.service.js';
 
-container.registerSingleton(EvolutionService);
 container.registerSingleton(CompanyService);
 container.registerSingleton(SellerService);
 container.registerSingleton(LeadService);

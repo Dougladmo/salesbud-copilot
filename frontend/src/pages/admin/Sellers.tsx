@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { sellers, companies } from '../../api/client';
-import type { Seller, CreateSellerDto, Company, QrCodeResponse } from '../../types';
+import type { Seller, CreateSellerDto, Company } from '../../types';
 
 const empty: CreateSellerDto = {
   companyId: '',
@@ -22,10 +22,6 @@ export default function Sellers() {
   const [editId, setEditId] = useState<string | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [error, setError] = useState('');
-
-  const [qrSeller, setQrSeller] = useState<Seller | null>(null);
-  const [qrData, setQrData] = useState<QrCodeResponse | null>(null);
-  const [qrLoading, setQrLoading] = useState(false);
 
   const load = () => {
     sellers.list().then(setList).catch((e) => setError(e.message));
@@ -77,7 +73,7 @@ export default function Sellers() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Tem certeza que deseja excluir? A instância WhatsApp será removida.')) return;
+    if (!confirm('Tem certeza que deseja excluir?')) return;
     await sellers.delete(id);
     load();
   };
@@ -90,59 +86,6 @@ export default function Sellers() {
       setError(err instanceof Error ? err.message : 'Erro ao alterar status');
     }
   };
-
-  const openQrModal = useCallback(async (s: Seller) => {
-    setQrSeller(s);
-    setQrLoading(true);
-    setQrData(null);
-    try {
-      const data = await sellers.getQrCode(s.id);
-      setQrData(data);
-    } catch {
-      setQrData({ status: 'error' });
-    }
-    setQrLoading(false);
-  }, []);
-
-  const refreshQr = useCallback(async () => {
-    if (!qrSeller) return;
-    setQrLoading(true);
-    try {
-      const data = await sellers.getQrCode(qrSeller.id);
-      setQrData(data);
-    } catch {
-      setQrData({ status: 'error' });
-    }
-    setQrLoading(false);
-  }, [qrSeller]);
-
-  const checkStatus = useCallback(async () => {
-    if (!qrSeller) return;
-    try {
-      const status = await sellers.getConnectionStatus(qrSeller.id);
-      if (status.connected) {
-        setQrSeller(null);
-        setQrData(null);
-        load();
-      }
-    } catch { /* ignore */ }
-  }, [qrSeller]);
-
-  const disconnectWhatsApp = async (s: Seller) => {
-    if (!confirm('Desconectar WhatsApp deste vendedor?')) return;
-    try {
-      await sellers.logout(s.id);
-      load();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Erro ao desconectar');
-    }
-  };
-
-  useEffect(() => {
-    if (!qrSeller || qrData?.status === 'already_connected') return;
-    const interval = setInterval(checkStatus, 3000);
-    return () => clearInterval(interval);
-  }, [qrSeller, qrData, checkStatus]);
 
   const traitLabel: Record<string, string> = {
     formal: 'Formal', informal: 'Informal',
@@ -297,7 +240,6 @@ export default function Sellers() {
                 <th className="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Nome</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Agente</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Empresa</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">WhatsApp</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Copilot</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Personalidade</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Ações</th>
@@ -309,24 +251,6 @@ export default function Sellers() {
                   <td className="px-4 py-3 text-sm text-navy font-medium">{s.name}</td>
                   <td className="px-4 py-3 text-sm text-text-muted">{s.agentName}</td>
                   <td className="px-4 py-3 text-sm text-text-muted">{s.company?.name || s.companyId.slice(0, 8)}</td>
-                  <td className="px-4 py-3">
-                    {s.whatsappConnected ? (
-                      <span
-                        className="inline-block px-3 py-0.5 rounded-full text-xs font-semibold bg-success text-white cursor-pointer hover:bg-success-hover transition"
-                        onClick={() => disconnectWhatsApp(s)}
-                        title="Clique para desconectar"
-                      >
-                        Conectado
-                      </span>
-                    ) : (
-                      <button
-                        className="bg-warning text-navy-dark px-3 py-1 rounded-full text-xs font-semibold hover:bg-amber-400 transition cursor-pointer"
-                        onClick={() => openQrModal(s)}
-                      >
-                        Conectar
-                      </button>
-                    )}
-                  </td>
                   <td className="px-4 py-3">
                     <button
                       className={`px-3 py-1 rounded-full text-xs font-bold transition cursor-pointer ${
@@ -357,7 +281,7 @@ export default function Sellers() {
               ))}
               {list.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="text-center py-8 text-text-muted text-sm">
+                  <td colSpan={6} className="text-center py-8 text-text-muted text-sm">
                     Nenhum vendedor cadastrado
                   </td>
                 </tr>
@@ -366,37 +290,6 @@ export default function Sellers() {
           </table>
         </div>
       </div>
-
-      {/* QR Code Modal */}
-      {qrSeller && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={() => { setQrSeller(null); setQrData(null); }}>
-          <div className="bg-white border border-border rounded-2xl p-7 max-w-md w-[90%] text-center shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-semibold text-navy mb-1">Conectar WhatsApp</h3>
-            <p className="text-text-muted text-sm mb-5">{qrSeller.name} — Escaneie o QR Code</p>
-
-            <div className="bg-surface rounded-xl p-4 mx-auto mb-5 min-h-[280px] flex items-center justify-center max-w-[300px]">
-              {qrLoading && <span className="text-text-muted text-sm">Carregando...</span>}
-              {!qrLoading && qrData?.base64 && (
-                <img src={qrData.base64} alt="QR Code WhatsApp" className="max-w-full h-auto rounded-lg" />
-              )}
-              {!qrLoading && qrData?.status === 'already_connected' && (
-                <span className="text-success font-semibold">WhatsApp já conectado!</span>
-              )}
-              {!qrLoading && qrData?.status === 'error' && (
-                <span className="text-danger text-sm">Erro ao gerar QR Code</span>
-              )}
-              {!qrLoading && !qrData?.base64 && !qrData?.status && (
-                <span className="text-danger text-sm">QR Code não disponível</span>
-              )}
-            </div>
-
-            <div className="flex gap-3 justify-center">
-              <button className={btnPrimary} onClick={refreshQr} disabled={qrLoading}>Atualizar QR Code</button>
-              <button className={btnSecondary} onClick={() => { setQrSeller(null); setQrData(null); }}>Fechar</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

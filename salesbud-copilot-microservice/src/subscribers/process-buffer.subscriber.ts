@@ -42,18 +42,18 @@ export async function handleProcessBuffer(data: unknown): Promise<void> {
     if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) mediaType = 'image';
     if (['mp4'].includes(ext)) mediaType = 'video';
 
-    await whatsappService.sendMedia(seller, remoteJid, url, mediaType);
+    await whatsappService.sendMedia(remoteJid, url, mediaType);
     const textWithoutUrl = response.replace(urlRegex, '').trim();
     if (textWithoutUrl) {
-      await whatsappService.sendText(seller, remoteJid, textWithoutUrl);
+      await whatsappService.sendText(remoteJid, textWithoutUrl);
     }
   } else if (response.length > seller.audioThreshold && seller.voiceId) {
     const audioBase64 = await ttsService.synthesize(response, seller.voiceId);
-    await whatsappService.sendAudio(seller, remoteJid, audioBase64);
+    await whatsappService.sendAudio(remoteJid, audioBase64);
   } else {
     const delay = response.length * seller.timePerCharMs;
     await new Promise((resolve) => setTimeout(resolve, Math.min(delay, 10000)));
-    await whatsappService.sendText(seller, remoteJid, response);
+    await whatsappService.sendText(remoteJid, response);
   }
 
   logger.info(`Response sent: seller=${sellerId} jid=${remoteJid}`);

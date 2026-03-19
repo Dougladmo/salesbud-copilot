@@ -2,7 +2,6 @@ import { injectable } from 'tsyringe';
 import axios from 'axios';
 import { env } from '../config/env.js';
 import { logger } from '../config/logger.js';
-import type { Seller } from '../models/seller.model.js';
 
 @injectable()
 export class WhatsappService {
@@ -17,8 +16,12 @@ export class WhatsappService {
     return env.EVOLUTION_API_URL;
   }
 
-  async sendText(seller: Seller, remoteJid: string, text: string): Promise<void> {
-    const url = `${this.baseUrl}/message/sendText/${seller.evolutionInstance}`;
+  private get instance() {
+    return env.EVOLUTION_INSTANCE_NAME;
+  }
+
+  async sendText(remoteJid: string, text: string): Promise<void> {
+    const url = `${this.baseUrl}/message/sendText/${this.instance}`;
     try {
       await axios.post(
         url,
@@ -31,8 +34,8 @@ export class WhatsappService {
     }
   }
 
-  async sendAudio(seller: Seller, remoteJid: string, audioBase64: string): Promise<void> {
-    const url = `${this.baseUrl}/message/sendWhatsAppAudio/${seller.evolutionInstance}`;
+  async sendAudio(remoteJid: string, audioBase64: string): Promise<void> {
+    const url = `${this.baseUrl}/message/sendWhatsAppAudio/${this.instance}`;
     try {
       await axios.post(
         url,
@@ -46,12 +49,11 @@ export class WhatsappService {
   }
 
   async sendMedia(
-    seller: Seller,
     remoteJid: string,
     mediaUrl: string,
     mediaType: string,
   ): Promise<void> {
-    const url = `${this.baseUrl}/message/sendMedia/${seller.evolutionInstance}`;
+    const url = `${this.baseUrl}/message/sendMedia/${this.instance}`;
     try {
       await axios.post(
         url,

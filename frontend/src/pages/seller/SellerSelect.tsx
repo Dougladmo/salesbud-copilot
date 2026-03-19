@@ -57,9 +57,6 @@ export default function SellerSelect() {
                   <p className="text-xs text-text-muted truncate">Agente: {s.agentName} — {s.company?.name || 'Sem empresa'}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  {s.whatsappConnected && (
-                    <span className="w-2 h-2 rounded-full bg-success"></span>
-                  )}
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${s.isActive ? 'bg-success/10 text-success' : 'bg-text-muted/10 text-text-muted'}`}>
                     {s.isActive ? 'ON' : 'OFF'}
                   </span>

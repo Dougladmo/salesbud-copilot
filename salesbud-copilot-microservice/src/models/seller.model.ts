@@ -26,12 +26,6 @@ export class Seller {
   @Column({ type: 'varchar', name: 'agent_name' })
   agentName: string;
 
-  @Column({ type: 'varchar', name: 'evolution_instance' })
-  evolutionInstance: string;
-
-  @Column({ type: 'boolean', name: 'whatsapp_connected', default: false })
-  whatsappConnected: boolean;
-
   @Column({ type: 'varchar', name: 'pinecone_namespace', nullable: true })
   pineconeNamespace: string | null;
 

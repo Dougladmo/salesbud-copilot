@@ -8,6 +8,7 @@ import { logger } from '../config/logger.js';
 import { SellerService } from './seller.service.js';
 import { RagService } from './rag.service.js';
 import { buildSystemPrompt } from '../utils/prompt-builder.js';
+import { sanitizeUserInput, sanitizeOutput } from '../utils/prompt-guard.js';
 import { createRagSearchTool } from '../jobs/rag-search.tool.js';
 import { createThinkTool } from '../jobs/think.tool.js';
 
@@ -29,6 +30,12 @@ export class AgentService {
     const systemPrompt = buildSystemPrompt(seller, company);
     const memoryKey = `memory:${sellerId}:${remoteJid}`;
 
+    const { sanitized: safeMessage, flagged, threats } = sanitizeUserInput(userMessage);
+
+    if (flagged) {
+      logger.warn(`Potential prompt injection detected: seller=${sellerId} threats=${threats.join(', ')}`);
+    }
+
     const history = await this.loadMemory(memoryKey);
 
     const tools = [
@@ -42,9 +49,9 @@ export class AgentService {
 
     const llm = new ChatOpenAI({
       modelName: 'openai/gpt-4o',
-      openAIApiKey: env.OPENROUTER_API_KEY,
       temperature: 0.7,
       configuration: {
+        apiKey: env.OPENROUTER_API_KEY,
         baseURL: 'https://openrouter.ai/api/v1',
       },
     });
@@ -54,21 +61,22 @@ export class AgentService {
     const messages = [
       new SystemMessage(systemPrompt),
       ...history,
-      new HumanMessage(userMessage),
+      new HumanMessage(safeMessage),
     ];
 
     try {
       const result = await agent.invoke({ messages });
 
       const lastMessage = result.messages[result.messages.length - 1];
-      const responseText =
+      const rawResponse =
         typeof lastMessage.content === 'string'
           ? lastMessage.content
           : JSON.stringify(lastMessage.content);
+      const responseText = sanitizeOutput(rawResponse);
 
       await this.saveMemory(
         memoryKey,
-        userMessage,
+        safeMessage,
         responseText,
         seller.maxMemoryMessages,
       );
