@@ -12,8 +12,8 @@ const SEED_COMPANY = {
 };
 
 const SEED_SELLER = {
-  name: 'Ana Silva',
-  agentName: 'Ana',
+  name: 'Douglas Moura',
+  agentName: 'Douglas',
   evolutionInstance: 'vendedor',
   traitFormality: 'informal' as const,
   traitHumor: 'humorous' as const,
