@@ -12,6 +12,9 @@ export const webhookController = {
   async handle(req: Request, res: Response) {
     const sellerId = param(req, 'sellerId');
     const payload = req.body as EvolutionPayload;
+
+    logger.info({ payload: JSON.stringify(payload).slice(0, 500) }, `Webhook received for seller=${sellerId}`);
+
     const { data } = payload;
 
     if (!data?.key?.remoteJid) {

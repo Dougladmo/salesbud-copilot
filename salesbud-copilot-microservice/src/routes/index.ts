@@ -3,7 +3,6 @@ import { companyRoutes } from './company.route.js';
 import { sellerRoutes } from './seller.route.js';
 import { leadRoutes } from './lead.route.js';
 import { ragRoutes } from './rag.route.js';
-import { webhookRoutes } from './webhook.route.js';
 import { chatRoutes } from './chat.route.js';
 import { leadController } from '../controllers/lead.controller.js';
 import { uuidParam } from '../middlewares/uuid-param.js';
@@ -18,7 +17,6 @@ router.use('/companies', requireApiAuth, companyRoutes);
 router.use('/sellers', requireApiAuth, sellerRoutes);
 router.use('/leads', requireApiAuth, leadRoutes);
 router.use('/', requireApiAuth, ragRoutes);
-router.use('/webhook', webhookRoutes);
 router.use('/chat', requireApiAuth, chatRoutes);
 
 router.get('/sellers/:sellerId/leads', requireApiAuth, uuidParam('sellerId'), catchAsync(leadController.findBySeller));
