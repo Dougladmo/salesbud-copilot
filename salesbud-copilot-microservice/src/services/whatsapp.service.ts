@@ -36,15 +36,6 @@ export class WhatsappService {
     await this.send('message/sendText', { number: remoteJid, text, delay: 1200 }, 'Text', instanceName);
   }
 
-  async sendAudio(remoteJid: string, audioBase64: string, instanceName?: string): Promise<void> {
-    await this.send(
-      'message/sendWhatsAppAudio',
-      { number: remoteJid, audio: audioBase64, encoding: true, delay: 1200 },
-      'Audio',
-      instanceName,
-    );
-  }
-
   async sendMedia(remoteJid: string, mediaUrl: string, mediaType: string, instanceName?: string): Promise<void> {
     await this.send(
       'message/sendMedia',

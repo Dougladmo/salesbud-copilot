@@ -12,14 +12,10 @@ export function SellerAdvancedFields({
 }) {
   return (
     <div className="mt-4 space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
         <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted">
           Pinecone Namespace
           <input className={inputCls} value={form.pineconeNamespace || ''} onChange={(e) => onChange({ pineconeNamespace: e.target.value || undefined })} placeholder="Auto-gerado se vazio" />
-        </label>
-        <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted">
-          Voice ID (ElevenLabs)
-          <input className={inputCls} value={form.voiceId || ''} onChange={(e) => onChange({ voiceId: e.target.value || undefined })} placeholder="Opcional — habilita respostas em áudio" />
         </label>
       </div>
 

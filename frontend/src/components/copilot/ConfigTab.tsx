@@ -6,8 +6,6 @@ const inputCls =
 export function ConfigTab({
   agentName,
   setAgentName,
-  voiceId,
-  setVoiceId,
   traitValues,
   traitSetters,
   saving,
@@ -15,8 +13,6 @@ export function ConfigTab({
 }: {
   agentName: string;
   setAgentName: (v: string) => void;
-  voiceId: string;
-  setVoiceId: (v: string) => void;
   traitValues: Record<string, string>;
   traitSetters: Record<string, (v: string) => void>;
   saving: boolean;
@@ -29,19 +25,11 @@ export function ConfigTab({
           <span className="text-lg">🤖</span>
           <h3 className="text-sm font-bold text-navy">Identidade</h3>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-text-muted uppercase tracking-wide">
-              Nome do Agente
-            </label>
-            <input className={inputCls} value={agentName} onChange={(e) => setAgentName(e.target.value)} required />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-text-muted uppercase tracking-wide">
-              Voice ID (ElevenLabs)
-            </label>
-            <input className={inputCls} value={voiceId} onChange={(e) => setVoiceId(e.target.value)} placeholder="Opcional — habilita respostas em áudio" />
-          </div>
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold text-text-muted uppercase tracking-wide">
+            Nome do Agente
+          </label>
+          <input className={inputCls} value={agentName} onChange={(e) => setAgentName(e.target.value)} required />
         </div>
       </section>
 

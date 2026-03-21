@@ -30,7 +30,6 @@ export interface Seller {
   traitEmpathy: TraitEmpathy;
   traitSelling: TraitSelling;
   customPrompt: string | null;
-  voiceId: string | null;
   evolutionInstanceName: string | null;
   maxMemoryMessages: number;
   isActive: boolean;
@@ -49,7 +48,6 @@ export interface CreateSellerDto {
   traitEmpathy?: TraitEmpathy;
   traitSelling?: TraitSelling;
   customPrompt?: string;
-  voiceId?: string;
   maxMemoryMessages?: number;
   isActive?: boolean;
 }

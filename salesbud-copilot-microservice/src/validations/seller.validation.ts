@@ -12,7 +12,6 @@ export const createSellerSchema = z.object({
   traitEmpathy: z.enum(['empathetic', 'objective']).optional(),
   traitSelling: z.enum(['consultive', 'aggressive']).optional(),
   customPrompt: z.string().optional(),
-  voiceId: z.string().optional(),
   maxMemoryMessages: z.number().int().min(10).max(1000).optional(),
   isActive: z.boolean().optional(),
 });

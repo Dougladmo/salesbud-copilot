@@ -78,7 +78,17 @@ export default function SellerLayout() {
             </button>
           )}
           <div className="flex items-center gap-3 px-4 pt-2">
-            <UserButton afterSignOutUrl="/sign-in" />
+            <UserButton
+              afterSignOutUrl="/sign-in"
+              userProfileProps={{
+                additionalOAuthScopes: {
+                  google: [
+                    'https://www.googleapis.com/auth/calendar.events',
+                    'https://www.googleapis.com/auth/calendar.freebusy',
+                  ],
+                },
+              }}
+            />
             <span className="text-xs text-white/40 truncate">{user?.firstName ?? 'Conta'}</span>
           </div>
         </div>

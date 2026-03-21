@@ -11,7 +11,6 @@ export function useCopilotConfig(seller: Seller | null, silentReload: () => void
   const [traitCommunication, setTraitCommunication] = useState('direct');
   const [traitEmpathy, setTraitEmpathy] = useState('empathetic');
   const [traitSelling, setTraitSelling] = useState('consultive');
-  const [voiceId, setVoiceId] = useState('');
 
   const traitSetters: Record<string, (v: string) => void> = {
     formality: setTraitFormality,
@@ -37,7 +36,6 @@ export function useCopilotConfig(seller: Seller | null, silentReload: () => void
     setTraitCommunication(seller.traitCommunication);
     setTraitEmpathy(seller.traitEmpathy);
     setTraitSelling(seller.traitSelling);
-    setVoiceId(seller.voiceId || '');
   }, [seller]);
 
   const handleSaveConfig = async (e: React.FormEvent) => {
@@ -52,7 +50,6 @@ export function useCopilotConfig(seller: Seller | null, silentReload: () => void
         traitCommunication: traitCommunication as 'direct' | 'detailed',
         traitEmpathy: traitEmpathy as 'empathetic' | 'objective',
         traitSelling: traitSelling as 'consultive' | 'aggressive',
-        voiceId: voiceId || undefined,
       });
       toast.success('Configurações salvas!');
       silentReload();
@@ -66,8 +63,6 @@ export function useCopilotConfig(seller: Seller | null, silentReload: () => void
   return {
     agentName,
     setAgentName,
-    voiceId,
-    setVoiceId,
     traitValues,
     traitSetters,
     saving,

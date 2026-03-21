@@ -50,9 +50,6 @@ export class Seller {
   @Column({ name: 'custom_prompt', type: 'text', nullable: true })
   customPrompt: string | null;
 
-  @Column({ type: 'varchar', name: 'voice_id', nullable: true })
-  voiceId: string | null;
-
   @Column({ type: 'int', name: 'max_memory_messages', default: 200 })
   maxMemoryMessages: number;
 
@@ -61,6 +58,9 @@ export class Seller {
 
   @Column({ type: 'boolean', name: 'is_active', default: true })
   isActive: boolean;
+
+  @Column({ type: 'varchar', default: 'America/Sao_Paulo' })
+  timezone: string;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

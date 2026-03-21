@@ -70,7 +70,6 @@ export default function Sellers() {
       traitEmpathy: s.traitEmpathy,
       traitSelling: s.traitSelling,
       customPrompt: s.customPrompt || undefined,
-      voiceId: s.voiceId || undefined,
       maxMemoryMessages: s.maxMemoryMessages,
       isActive: s.isActive,
     });

@@ -4,7 +4,6 @@ import { MessageBufferService } from '../services/message-buffer.service.js';
 import { AgentService } from '../services/agent.service.js';
 import { SellerService } from '../services/seller.service.js';
 import { WhatsappService } from '../services/whatsapp.service.js';
-import { TtsService } from '../services/tts.service.js';
 
 interface ProcessBufferPayload {
   sellerId: string;
@@ -33,7 +32,6 @@ export async function handleProcessBuffer(data: unknown): Promise<void> {
   const agentService = container.resolve(AgentService);
   const sellerService = container.resolve(SellerService);
   const whatsappService = container.resolve(WhatsappService);
-  const ttsService = container.resolve(TtsService);
 
   const paused = await bufferService.isAgentPaused(sellerId, remoteJid);
   if (paused) {
@@ -69,10 +67,6 @@ export async function handleProcessBuffer(data: unknown): Promise<void> {
     if (textWithoutUrl) {
       await whatsappService.sendText(remoteJid, textWithoutUrl, instanceName);
     }
-  } else if (response.length > 500 && seller.voiceId) {
-    const cleanResponse = response.replace(/\n---\n/g, '\n\n');
-    const audioBase64 = await ttsService.synthesize(cleanResponse, seller.voiceId);
-    await whatsappService.sendAudio(remoteJid, audioBase64, instanceName);
   } else {
     const parts = response.split(/\n---\n/).map((p) => p.trim()).filter(Boolean);
     for (const part of parts) {

@@ -7,9 +7,9 @@ import { RagService } from './services/rag.service.js';
 import { AgentService } from './services/agent.service.js';
 import { MessageBufferService } from './services/message-buffer.service.js';
 import { TranscriptionService } from './services/transcription.service.js';
-import { TtsService } from './services/tts.service.js';
 import { WhatsappService } from './services/whatsapp.service.js';
 import { EvolutionService } from './services/evolution.service.js';
+import { CalendarService } from './services/calendar.service.js';
 
 container.registerSingleton(CompanyService);
 container.registerSingleton(SellerService);
@@ -18,8 +18,8 @@ container.registerSingleton(RagService);
 container.registerSingleton(AgentService);
 container.registerSingleton(MessageBufferService);
 container.registerSingleton(TranscriptionService);
-container.registerSingleton(TtsService);
 container.registerSingleton(WhatsappService);
 container.registerSingleton(EvolutionService);
+container.registerSingleton(CalendarService);
 
 export { container };

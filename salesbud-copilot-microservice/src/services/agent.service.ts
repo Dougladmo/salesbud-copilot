@@ -13,6 +13,9 @@ import { sanitizeUserInput, sanitizeOutput } from '../utils/prompt-guard.js';
 import { createRagSearchTool } from '../tools/rag-search.tool.js';
 import { createThinkTool } from '../tools/think.tool.js';
 import { createClassifyLeadTool } from '../tools/classify-lead.tool.js';
+import { createCheckAvailabilityTool } from '../tools/check-availability.tool.js';
+import { createScheduleMeetingTool } from '../tools/schedule-meeting.tool.js';
+import { CalendarService } from './calendar.service.js';
 
 @injectable()
 export class AgentService {
@@ -22,6 +25,7 @@ export class AgentService {
     @inject(SellerService) private readonly sellerService: SellerService,
     @inject(RagService) private readonly ragService: RagService,
     @inject(LeadService) private readonly leadService: LeadService,
+    @inject(CalendarService) private readonly calendarService: CalendarService,
   ) {
     this.model = new ChatOpenAI({
       model: 'deepseek/deepseek-v3.2',
@@ -62,6 +66,23 @@ export class AgentService {
       createThinkTool(),
       createClassifyLeadTool(this.leadService, sellerId, remoteJid),
     ];
+
+    if (seller.clerkUserId) {
+      tools.push(
+        createCheckAvailabilityTool(
+          this.calendarService,
+          seller.clerkUserId,
+          seller.timezone,
+        ),
+        createScheduleMeetingTool(
+          this.calendarService,
+          sellerId,
+          seller.clerkUserId,
+          remoteJid,
+          seller.timezone,
+        ),
+      );
+    }
 
     const agent = createAgent({ model: this.model, tools, systemPrompt });
 

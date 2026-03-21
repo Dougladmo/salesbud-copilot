@@ -9,7 +9,6 @@ const envSchema = z.object({
   OPENROUTER_API_KEY: z.string().min(1),
   PINECONE_API_KEY: z.string().min(1),
   PINECONE_INDEX: z.string().default('salesbud-sdr'),
-  ELEVENLABS_API_KEY: z.string().default(''),
   EVOLUTION_API_URL: z.string().default('http://localhost:8080'),
   EVOLUTION_API_KEY: z.string().default(''),
   EVOLUTION_INSTANCE_NAME: z.string().default('Botdeteste'),

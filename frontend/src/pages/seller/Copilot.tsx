@@ -64,8 +64,6 @@ export default function Copilot() {
           <ConfigTab
             agentName={config.agentName}
             setAgentName={config.setAgentName}
-            voiceId={config.voiceId}
-            setVoiceId={config.setVoiceId}
             traitValues={config.traitValues}
             traitSetters={config.traitSetters}
             saving={config.saving}
