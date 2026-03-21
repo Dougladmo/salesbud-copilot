@@ -10,6 +10,7 @@ import { RagService } from './rag.service.js';
 import { LeadService } from './lead.service.js';
 import { buildSystemPrompt } from '../utils/prompt-builder.js';
 import { sanitizeUserInput, sanitizeOutput } from '../utils/prompt-guard.js';
+import type { StructuredToolInterface } from '@langchain/core/tools';
 import { createRagSearchTool } from '../tools/rag-search.tool.js';
 import { createThinkTool } from '../tools/think.tool.js';
 import { createClassifyLeadTool } from '../tools/classify-lead.tool.js';
@@ -57,7 +58,7 @@ export class AgentService {
     const maxMessages = seller.maxMemoryMessages ?? 200;
     const history = await this.loadMemory(memoryKey, maxMessages);
 
-    const tools = [
+    const tools: StructuredToolInterface[] = [
       createRagSearchTool(
         this.ragService,
         company.pineconeNamespace,
