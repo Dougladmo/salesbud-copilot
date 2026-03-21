@@ -20,5 +20,6 @@ router.use('/', requireApiAuth, ragRoutes);
 router.use('/chat', requireApiAuth, chatRoutes);
 
 router.get('/sellers/:sellerId/leads', requireApiAuth, uuidParam('sellerId'), catchAsync(leadController.findBySeller));
+router.get('/sellers/:sellerId/leads/by-jid/:remoteJid', requireApiAuth, uuidParam('sellerId'), catchAsync(leadController.findByJid));
 
 export { router as apiRouter };

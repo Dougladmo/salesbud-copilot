@@ -1,13 +1,15 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { UserButton, useOrganization, useUser } from '@clerk/clerk-react';
 import { useSeller } from '../context/SellerContext';
 
 export default function SellerLayout() {
   const { seller, loading } = useSeller();
   const navigate = useNavigate();
+  const location = useLocation();
   const { membership } = useOrganization();
   const { user } = useUser();
   const isAdmin = membership?.role === 'org:admin';
+  const isChatPage = location.pathname.startsWith('/seller/chat');
 
   if (loading || !seller) {
     return (
@@ -81,7 +83,7 @@ export default function SellerLayout() {
           </div>
         </div>
       </aside>
-      <main className="flex-1 ml-64 p-8 max-w-4xl">
+      <main className={`flex-1 ml-64 ${isChatPage ? 'p-0' : 'p-8 max-w-4xl'}`}>
         <Outlet />
       </main>
     </div>

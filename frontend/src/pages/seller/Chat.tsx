@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { chat, type EvolutionChat, type ChatMessage } from '../../api/client';
+import { useSeller } from '../../context/SellerContext';
+import { LeadPanel } from '../../components/chat/LeadPanel';
 
 function extractText(msg: ChatMessage): string {
   const m = msg.message;
@@ -68,8 +70,10 @@ function getInitial(name: string): string {
 }
 
 export default function ChatPage() {
+  const { seller } = useSeller();
   const [chats, setChats] = useState<EvolutionChat[]>([]);
   const [selectedJid, setSelectedJid] = useState<string | null>(null);
+  const [showLeadPanel, setShowLeadPanel] = useState(true);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [loadingChats, setLoadingChats] = useState(true);
@@ -77,8 +81,10 @@ export default function ChatPage() {
   const [sending, setSending] = useState(false);
   const [search, setSearch] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const prevMsgCountRef = useRef(0);
 
   useEffect(() => {
     loadChats();
@@ -106,18 +112,17 @@ export default function ChatPage() {
     }
   }
 
-  const loadMessages = useCallback(async (jid: string) => {
+  const loadMessages = useCallback(async (jid: string, showLoading = true) => {
     try {
-      setLoadingMessages(true);
+      if (showLoading) setLoadingMessages(true);
       const result = await chat.findMessages(jid, 1, 80);
       const records = result.records ?? [];
-      // API returns newest first, reverse for chronological display
       const sorted = [...records].sort((a, b) => a.messageTimestamp - b.messageTimestamp);
       setMessages(sorted);
     } catch (err) {
       console.error('Failed to load messages:', err);
     } finally {
-      setLoadingMessages(false);
+      if (showLoading) setLoadingMessages(false);
     }
   }, []);
 
@@ -126,7 +131,7 @@ export default function ChatPage() {
     loadMessages(selectedJid);
 
     if (pollingRef.current) clearInterval(pollingRef.current);
-    pollingRef.current = setInterval(() => loadMessages(selectedJid), 8000);
+    pollingRef.current = setInterval(() => loadMessages(selectedJid, false), 8000);
 
     return () => {
       if (pollingRef.current) clearInterval(pollingRef.current);
@@ -134,7 +139,16 @@ export default function ChatPage() {
   }, [selectedJid, loadMessages]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    const isNewMessages = messages.length !== prevMsgCountRef.current;
+    prevMsgCountRef.current = messages.length;
+    if (!isNewMessages) return;
+    // Auto-scroll if near bottom (within 150px) or on first load
+    const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 150;
+    if (isNearBottom) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [messages]);
 
   async function handleSend() {
@@ -153,7 +167,7 @@ export default function ChatPage() {
 
     try {
       await chat.sendMessage(selectedJid, text);
-      setTimeout(() => loadMessages(selectedJid), 2000);
+      setTimeout(() => loadMessages(selectedJid, false), 2000);
     } catch (err) {
       console.error('Failed to send:', err);
     } finally {
@@ -186,7 +200,7 @@ export default function ChatPage() {
   });
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] bg-surface rounded-2xl overflow-hidden border border-border shadow-sm">
+    <div className="flex h-screen bg-surface overflow-hidden">
       {/* Sidebar - Contact list */}
       <div className="w-80 bg-white border-r border-border flex flex-col shrink-0">
         <div className="p-4 border-b border-border">
@@ -304,19 +318,33 @@ export default function ChatPage() {
                 </p>
                 <p className="text-[11px] text-text-muted truncate">{formatJid(selectedChat.remoteJid)}</p>
               </div>
-              <button
-                onClick={() => loadMessages(selectedJid)}
-                className="ml-auto p-2 rounded-lg hover:bg-surface transition-colors cursor-pointer bg-transparent border-none"
-                title="Atualizar mensagens"
-              >
-                <svg className="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-              </button>
+              <div className="ml-auto flex items-center gap-1">
+                <button
+                  onClick={() => loadMessages(selectedJid)}
+                  className="p-2 rounded-lg hover:bg-surface transition-colors cursor-pointer bg-transparent border-none"
+                  title="Atualizar mensagens"
+                >
+                  <svg className="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setShowLeadPanel(!showLeadPanel)}
+                  className={`p-2 rounded-lg transition-colors cursor-pointer border-none ${
+                    showLeadPanel ? 'bg-accent/10 text-accent' : 'hover:bg-surface text-text-muted bg-transparent'
+                  }`}
+                  title={showLeadPanel ? 'Ocultar painel do lead' : 'Exibir painel do lead'}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             {/* Messages area */}
             <div
+              ref={messagesContainerRef}
               className="flex-1 overflow-y-auto px-5 py-4"
               style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23e2e6ed\' fill-opacity=\'0.3\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")' }}
             >
@@ -408,6 +436,18 @@ export default function ChatPage() {
           </>
         )}
       </div>
+
+      {/* Lead CRM Panel */}
+      {selectedJid && seller && showLeadPanel && (
+        <div className="w-80 bg-white border-l border-border flex flex-col shrink-0 overflow-hidden">
+          <div className="px-4 py-3 border-b border-border">
+            <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider">Lead CRM</h3>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <LeadPanel sellerId={seller.id} remoteJid={selectedJid} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

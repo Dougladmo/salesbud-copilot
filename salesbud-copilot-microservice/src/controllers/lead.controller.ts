@@ -28,6 +28,18 @@ export const leadController = {
     res.json(lead);
   },
 
+  async findByJid(req: Request, res: Response) {
+    const service = container.resolve(LeadService);
+    const sellerId = param(req, 'sellerId');
+    const remoteJid = decodeURIComponent(param(req, 'remoteJid'));
+    const lead = await service.findBySellerAndJid(sellerId, remoteJid);
+    if (!lead) {
+      res.json(null);
+      return;
+    }
+    res.json(lead);
+  },
+
   async update(req: Request, res: Response) {
     const service = container.resolve(LeadService);
     const lead = await service.update(param(req, 'id'), req.body);

@@ -29,6 +29,7 @@ import type {
   CreateCompanyDto,
   Seller,
   CreateSellerDto,
+  Lead,
 } from '../types';
 
 export interface DocumentRecord {
@@ -141,4 +142,11 @@ export const sellers = {
     request<{ pairingCode?: string; code?: string; base64?: string }>(`/sellers/${id}/qrcode`),
   getConnectionState: (id: string) =>
     request<{ instance: string; state: string }>(`/sellers/${id}/connection-state`),
+};
+
+export const leads = {
+  findByJid: (sellerId: string, remoteJid: string) =>
+    request<Lead | null>(`/sellers/${sellerId}/leads/by-jid/${encodeURIComponent(remoteJid)}`),
+  update: (id: string, data: Partial<Lead>) =>
+    request<Lead>(`/leads/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
 };

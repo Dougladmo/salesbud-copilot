@@ -53,3 +53,28 @@ export interface CreateSellerDto {
   maxMemoryMessages?: number;
   isActive?: boolean;
 }
+
+export type LeadStatus = 'new' | 'contacted' | 'qualified' | 'scheduled' | 'converted' | 'lost';
+export type LeadTemperature = 'cold' | 'warm' | 'hot';
+
+export interface Lead {
+  id: string;
+  sellerId: string;
+  remoteJid: string;
+  name: string | null;
+  phone: string;
+  status: LeadStatus;
+  temperature: LeadTemperature | null;
+  notes: string | null;
+  painPoints: string[] | null;
+  expectations: string[] | null;
+  interests: string[] | null;
+  objections: string[] | null;
+  budget: string | null;
+  timeline: string | null;
+  isDecisionMaker: boolean | null;
+  qualificationSummary: string | null;
+  lastContactAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
