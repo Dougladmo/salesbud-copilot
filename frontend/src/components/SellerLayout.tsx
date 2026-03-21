@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { UserButton, useOrganization, useUser } from '@clerk/clerk-react';
 import { useSeller } from '../context/SellerContext';
@@ -10,6 +11,12 @@ export default function SellerLayout() {
   const { user } = useUser();
   const isAdmin = membership?.role === 'org:admin';
   const isChatPage = location.pathname.startsWith('/seller/chat');
+  const userButtonRef = useRef<HTMLDivElement>(null);
+
+  const handleHeaderClick = () => {
+    const btn = userButtonRef.current?.querySelector('button');
+    btn?.click();
+  };
 
   if (loading || !seller) {
     return (
@@ -26,11 +33,31 @@ export default function SellerLayout() {
           Sales<span className="text-accent">bud</span>
         </h1>
 
-        <div className="bg-white/10 rounded-xl p-3 mb-6">
+        <div
+          onClick={handleHeaderClick}
+          className="bg-white/10 rounded-xl p-3 mb-6 cursor-pointer hover:bg-white/15 transition-colors"
+        >
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-accent text-white flex items-center justify-center text-sm font-bold shrink-0">
-              {seller.name.charAt(0).toUpperCase()}
+            <div ref={userButtonRef} className="shrink-0 absolute -left-[9999px]">
+              <UserButton
+                afterSignOutUrl="/sign-in"
+                userProfileProps={{
+                  additionalOAuthScopes: {
+                    google: [
+                      'https://www.googleapis.com/auth/calendar.events',
+                      'https://www.googleapis.com/auth/calendar.freebusy',
+                    ],
+                  },
+                }}
+              />
             </div>
+            {user?.imageUrl ? (
+              <img src={user.imageUrl} alt={seller.name} className="w-9 h-9 rounded-full shrink-0 object-cover" />
+            ) : (
+              <div className="w-9 h-9 rounded-full bg-accent text-white flex items-center justify-center text-sm font-bold shrink-0">
+                {seller.name.charAt(0).toUpperCase()}
+              </div>
+            )}
             <div className="min-w-0">
               <p className="text-sm font-medium text-white truncate">{seller.name}</p>
               <p className="text-[11px] text-white/50 truncate">{seller.company?.name}</p>
@@ -77,20 +104,6 @@ export default function SellerLayout() {
               Painel Admin
             </button>
           )}
-          <div className="flex items-center gap-3 px-4 pt-2">
-            <UserButton
-              afterSignOutUrl="/sign-in"
-              userProfileProps={{
-                additionalOAuthScopes: {
-                  google: [
-                    'https://www.googleapis.com/auth/calendar.events',
-                    'https://www.googleapis.com/auth/calendar.freebusy',
-                  ],
-                },
-              }}
-            />
-            <span className="text-xs text-white/40 truncate">{user?.firstName ?? 'Conta'}</span>
-          </div>
         </div>
       </aside>
       <main className={`flex-1 ml-64 ${isChatPage ? 'p-0' : 'p-8 max-w-4xl'}`}>

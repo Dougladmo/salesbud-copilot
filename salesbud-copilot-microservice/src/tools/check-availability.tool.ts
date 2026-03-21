@@ -9,12 +9,14 @@ export function createCheckAvailabilityTool(
   clerkUserId: string,
   timezone: string,
 ) {
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: timezone });
+
   return new DynamicStructuredTool({
     name: 'check_availability',
     description:
-      'Verifica a disponibilidade na agenda do vendedor. Use ANTES de sugerir ou confirmar qualquer horário de reunião. Retorna os horários ocupados e se o período solicitado está livre.',
+      `Verifica a disponibilidade na agenda do vendedor. Use ANTES de sugerir ou confirmar qualquer horário de reunião. Retorna os horários ocupados e se o período solicitado está livre. A data de HOJE é ${today}.`,
     schema: z.object({
-      date: z.string().describe('Data para verificar no formato YYYY-MM-DD'),
+      date: z.string().describe(`Data para verificar no formato YYYY-MM-DD. Hoje é ${today}. Use o ano correto (${new Date().getFullYear()}).`),
       start_time: z
         .string()
         .describe('Hora de início no formato HH:mm (24h)'),
@@ -27,6 +29,10 @@ export function createCheckAvailabilityTool(
     }),
     func: async ({ date, start_time, end_time, buffer_minutes }) => {
       try {
+        // Validate date is not in the past
+        const dateValidation = validateDate(date, timezone);
+        if (dateValidation) return dateValidation;
+
         const timeMin = toISODateTime(date, start_time, timezone);
         const timeMax = toISODateTime(date, end_time, timezone);
 
@@ -70,6 +76,14 @@ export function createCheckAvailabilityTool(
   });
 }
 
+function validateDate(date: string, timezone: string): string | null {
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: timezone });
+  if (date < today) {
+    return `Data inválida: ${date} é no passado. Hoje é ${today}. Use uma data futura com o ano correto (${new Date().getFullYear()}).`;
+  }
+  return null;
+}
+
 function toISODateTime(
   date: string,
   time: string,
@@ -89,12 +103,10 @@ function toISODateTime(
     timeZoneName: 'longOffset',
   });
 
-  // Parse to get the timezone offset for the given date
   const parts = formatter.formatToParts(new Date(dateTimeStr));
   const offsetPart = parts.find((p) => p.type === 'timeZoneName');
   const offset = offsetPart?.value ?? '';
 
-  // GMT-03:00 → -03:00
   const tzOffset = offset.replace('GMT', '') || '+00:00';
 
   return `${dateTimeStr}${tzOffset}`;

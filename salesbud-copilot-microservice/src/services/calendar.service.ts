@@ -136,6 +136,7 @@ export class CalendarService {
           );
         }
         if (status === 403) {
+          logger.error({ status, errorBody, url }, 'Google Calendar 403 Forbidden details');
           throw new CalendarApiError(
             'Sem permissão para acessar o Google Calendar. Verifique os escopos OAuth.',
             403,

@@ -15,12 +15,15 @@ export function createScheduleMeetingTool(
   contactJid: string,
   timezone: string,
 ) {
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: timezone });
+  const currentYear = new Date().getFullYear();
+
   return new DynamicStructuredTool({
     name: 'schedule_meeting',
     description:
-      'Agenda uma reunião com link do Google Meet no calendário do vendedor. SEMPRE use check_availability antes para verificar se o horário está livre. Cria automaticamente um link do Google Meet para a reunião.',
+      `Agenda uma reunião com link do Google Meet no calendário do vendedor. SEMPRE use check_availability antes para verificar se o horário está livre. Cria automaticamente um link do Google Meet para a reunião. A data de HOJE é ${today}.`,
     schema: z.object({
-      date: z.string().describe('Data da reunião no formato YYYY-MM-DD'),
+      date: z.string().describe(`Data da reunião no formato YYYY-MM-DD. Hoje é ${today}. Use o ano correto (${currentYear}).`),
       start_time: z
         .string()
         .describe('Hora de início no formato HH:mm (24h)'),
@@ -38,7 +41,7 @@ export function createScheduleMeetingTool(
         .string()
         .email()
         .optional()
-        .describe('Email do participante para enviar convite'),
+        .describe('Email do participante para enviar convite pelo Google Calendar. SEMPRE inclua o email do lead se ele forneceu durante a conversa.'),
     }),
     func: async ({
       date,
@@ -48,6 +51,11 @@ export function createScheduleMeetingTool(
       description,
       attendee_email,
     }) => {
+      // Validate date is not in the past
+      if (date < today) {
+        return `Data inválida: ${date} é no passado. Hoje é ${today}. Use uma data futura com o ano correto (${currentYear}).`;
+      }
+
       const startDateTime = toISODateTime(date, start_time, timezone);
       const endDateTime = toISODateTime(date, end_time, timezone);
 
