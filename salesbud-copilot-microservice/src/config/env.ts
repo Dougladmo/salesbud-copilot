@@ -13,6 +13,7 @@ const envSchema = z.object({
   EVOLUTION_API_URL: z.string().default('http://localhost:8080'),
   EVOLUTION_API_KEY: z.string().default(''),
   EVOLUTION_INSTANCE_NAME: z.string().default('Botdeteste'),
+  WEBHOOK_BASE_URL: z.string().default('http://localhost:3000'),
   CLERK_PUBLISHABLE_KEY: z.string().min(1),
   CLERK_SECRET_KEY: z.string().min(1),
   CLERK_WEBHOOK_SIGNING_SECRET: z.string().min(1),

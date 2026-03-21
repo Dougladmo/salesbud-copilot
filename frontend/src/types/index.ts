@@ -31,6 +31,7 @@ export interface Seller {
   traitSelling: TraitSelling;
   customPrompt: string | null;
   voiceId: string | null;
+  evolutionInstanceName: string | null;
   maxMemoryMessages: number;
   isActive: boolean;
   createdAt: string;

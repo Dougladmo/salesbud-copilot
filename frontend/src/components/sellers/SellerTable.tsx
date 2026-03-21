@@ -1,6 +1,7 @@
 import type { Seller } from '../../types';
 
 const btnSmPrimary = 'bg-navy-dark text-white px-3 py-1 rounded-full text-xs font-medium hover:bg-navy-light transition cursor-pointer';
+const btnSmSuccess = 'bg-success text-white px-3 py-1 rounded-full text-xs font-medium hover:bg-success-hover transition cursor-pointer';
 const btnSmDanger = 'bg-danger text-white px-3 py-1 rounded-full text-xs font-medium hover:bg-danger-hover transition cursor-pointer';
 
 const traitLabel: Record<string, string> = {
@@ -16,11 +17,13 @@ export function SellerTable({
   onEdit,
   onDelete,
   onToggleCopilot,
+  onConnectWhatsApp,
 }: {
   list: Seller[];
   onEdit: (s: Seller) => void;
   onDelete: (id: string) => void;
   onToggleCopilot: (s: Seller) => void;
+  onConnectWhatsApp: (s: Seller) => void;
 }) {
   return (
     <div className="bg-surface border border-border rounded-xl overflow-hidden">
@@ -62,6 +65,9 @@ export function SellerTable({
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex gap-2">
+                    {s.evolutionInstanceName && (
+                      <button className={btnSmSuccess} onClick={() => onConnectWhatsApp(s)}>WhatsApp</button>
+                    )}
                     <button className={btnSmPrimary} onClick={() => onEdit(s)}>Editar</button>
                     <button className={btnSmDanger} onClick={() => onDelete(s.id)}>Excluir</button>
                   </div>

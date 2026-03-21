@@ -56,6 +56,9 @@ export class Seller {
   @Column({ type: 'int', name: 'max_memory_messages', default: 200 })
   maxMemoryMessages: number;
 
+  @Column({ type: 'varchar', name: 'evolution_instance_name', nullable: true })
+  evolutionInstanceName: string | null;
+
   @Column({ type: 'boolean', name: 'is_active', default: true })
   isActive: boolean;
 

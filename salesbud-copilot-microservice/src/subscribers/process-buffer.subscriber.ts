@@ -49,6 +49,7 @@ export async function handleProcessBuffer(data: unknown): Promise<void> {
   }
 
   const seller = await sellerService.findOne(sellerId);
+  const instanceName = seller.evolutionInstanceName || undefined;
   const combinedText = messages.join('\n');
 
   const response = await agentService.processMessage(sellerId, remoteJid, combinedText);
@@ -63,21 +64,21 @@ export async function handleProcessBuffer(data: unknown): Promise<void> {
     if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) mediaType = 'image';
     if (['mp4'].includes(ext)) mediaType = 'video';
 
-    await whatsappService.sendMedia(remoteJid, url, mediaType);
+    await whatsappService.sendMedia(remoteJid, url, mediaType, instanceName);
     const textWithoutUrl = response.replace(urlRegex, '').trim();
     if (textWithoutUrl) {
-      await whatsappService.sendText(remoteJid, textWithoutUrl);
+      await whatsappService.sendText(remoteJid, textWithoutUrl, instanceName);
     }
   } else if (response.length > 500 && seller.voiceId) {
     const cleanResponse = response.replace(/\n---\n/g, '\n\n');
     const audioBase64 = await ttsService.synthesize(cleanResponse, seller.voiceId);
-    await whatsappService.sendAudio(remoteJid, audioBase64);
+    await whatsappService.sendAudio(remoteJid, audioBase64, instanceName);
   } else {
     const parts = response.split(/\n---\n/).map((p) => p.trim()).filter(Boolean);
     for (const part of parts) {
       const delay = part.length * 50;
       await new Promise((resolve) => setTimeout(resolve, Math.min(delay, 10000)));
-      await whatsappService.sendText(remoteJid, part);
+      await whatsappService.sendText(remoteJid, part, instanceName);
     }
   }
 

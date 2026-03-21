@@ -12,5 +12,7 @@ router.get('/', catchAsync(sellerController.findAll));
 router.get('/:id', uuidParam('id'), catchAsync(sellerController.findOne));
 router.patch('/:id', uuidParam('id'), validate(updateSellerSchema), catchAsync(sellerController.update));
 router.delete('/:id', uuidParam('id'), catchAsync(sellerController.remove));
+router.get('/:id/qrcode', uuidParam('id'), catchAsync(sellerController.getQrCode));
+router.get('/:id/connection-state', uuidParam('id'), catchAsync(sellerController.getConnectionState));
 
 export { router as sellerRoutes };

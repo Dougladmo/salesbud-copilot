@@ -9,6 +9,7 @@ import { MessageBufferService } from './services/message-buffer.service.js';
 import { TranscriptionService } from './services/transcription.service.js';
 import { TtsService } from './services/tts.service.js';
 import { WhatsappService } from './services/whatsapp.service.js';
+import { EvolutionService } from './services/evolution.service.js';
 
 container.registerSingleton(CompanyService);
 container.registerSingleton(SellerService);
@@ -19,5 +20,6 @@ container.registerSingleton(MessageBufferService);
 container.registerSingleton(TranscriptionService);
 container.registerSingleton(TtsService);
 container.registerSingleton(WhatsappService);
+container.registerSingleton(EvolutionService);
 
 export { container };
