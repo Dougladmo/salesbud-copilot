@@ -1,10 +1,12 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { UserButton } from '@clerk/clerk-react';
+import { UserButton, useOrganization } from '@clerk/clerk-react';
 import { useSeller } from '../context/SellerContext';
 
 export default function SellerLayout() {
   const { seller, loading } = useSeller();
   const navigate = useNavigate();
+  const { membership } = useOrganization();
+  const isAdmin = membership?.role === 'org:admin';
 
   if (loading || !seller) {
     return (
@@ -50,13 +52,15 @@ export default function SellerLayout() {
         </nav>
 
         <div className="mt-auto space-y-2 pt-4 border-t border-white/10">
-          <button
-            onClick={() => navigate('/admin')}
-            className="w-full flex items-center gap-3 px-4 py-2 rounded-full text-xs text-white/40 hover:text-white/70 hover:bg-white/5 transition cursor-pointer bg-transparent border-none"
-          >
-            <span>⚙️</span>
-            Painel Admin
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => navigate('/admin')}
+              className="w-full flex items-center gap-3 px-4 py-2 rounded-full text-xs text-white/40 hover:text-white/70 hover:bg-white/5 transition cursor-pointer bg-transparent border-none"
+            >
+              <span>⚙️</span>
+              Painel Admin
+            </button>
+          )}
           <div className="flex items-center gap-3 px-4 pt-2">
             <UserButton afterSignOutUrl="/sign-in" />
             <span className="text-xs text-white/40">Conta</span>

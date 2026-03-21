@@ -1,5 +1,5 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { UserButton } from '@clerk/clerk-react';
+import { NavLink, Navigate, Outlet, useNavigate } from 'react-router-dom';
+import { UserButton, useOrganization } from '@clerk/clerk-react';
 import { useSeller } from '../context/SellerContext';
 
 const navItems = [
@@ -10,6 +10,19 @@ const navItems = [
 export default function AdminLayout() {
   const navigate = useNavigate();
   const { seller } = useSeller();
+  const { membership, isLoaded } = useOrganization();
+
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <p className="text-text-muted text-sm">Carregando...</p>
+      </div>
+    );
+  }
+
+  if (membership?.role !== 'org:admin') {
+    return <Navigate to="/seller/copilot" replace />;
+  }
 
   return (
     <div className="flex min-h-screen bg-white">
