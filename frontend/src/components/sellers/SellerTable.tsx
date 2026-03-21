@@ -17,13 +17,11 @@ export function SellerTable({
   onEdit,
   onDelete,
   onToggleCopilot,
-  onConnectWhatsApp,
 }: {
   list: Seller[];
   onEdit: (s: Seller) => void;
   onDelete: (id: string) => void;
   onToggleCopilot: (s: Seller) => void;
-  onConnectWhatsApp: (s: Seller) => void;
 }) {
   return (
     <div className="bg-surface border border-border rounded-xl overflow-hidden">
@@ -65,9 +63,6 @@ export function SellerTable({
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex gap-2">
-                    {s.evolutionInstanceName && (
-                      <button className={btnSmSuccess} onClick={() => onConnectWhatsApp(s)}>WhatsApp</button>
-                    )}
                     <button className={btnSmPrimary} onClick={() => onEdit(s)}>Editar</button>
                     <button className={btnSmDanger} onClick={() => onDelete(s.id)}>Excluir</button>
                   </div>

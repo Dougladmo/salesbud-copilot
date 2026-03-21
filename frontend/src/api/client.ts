@@ -138,10 +138,6 @@ export const sellers = {
     request<void>(`/sellers/${sellerId}/documents/${documentId}`, { method: 'DELETE' }),
   toggleActive: (id: string, isActive: boolean) =>
     request<Seller>(`/sellers/${id}`, { method: 'PATCH', body: JSON.stringify({ isActive }) }),
-  getQrCode: (id: string) =>
-    request<{ pairingCode?: string; code?: string; base64?: string }>(`/sellers/${id}/qrcode`),
-  getConnectionState: (id: string) =>
-    request<{ instance: string; state: string }>(`/sellers/${id}/connection-state`),
 };
 
 export const leads = {

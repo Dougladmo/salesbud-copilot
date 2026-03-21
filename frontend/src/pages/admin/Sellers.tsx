@@ -5,7 +5,6 @@ import type { Seller, CreateSellerDto } from '../../types';
 import { useSeller } from '../../context/SellerContext';
 import { SellerForm } from '../../components/sellers/SellerForm';
 import { SellerTable } from '../../components/sellers/SellerTable';
-import { WhatsAppConnect } from '../../components/sellers/WhatsAppConnect';
 
 const empty: CreateSellerDto = {
   companyId: '',
@@ -21,7 +20,6 @@ export default function Sellers() {
   const [form, setForm] = useState<CreateSellerDto>({ ...empty, companyId });
   const [editId, setEditId] = useState<string | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [qrSellerId, setQrSellerId] = useState<string | null>(null);
 
   const load = () => {
     sellers.list()
@@ -41,11 +39,8 @@ export default function Sellers() {
         await sellers.update(editId, rest);
         toast.success('Vendedor atualizado!');
       } else {
-        const created = await sellers.create({ ...form, companyId });
+        await sellers.create({ ...form, companyId });
         toast.success('Vendedor criado!');
-        if (created.evolutionInstanceName) {
-          setQrSellerId(created.id);
-        }
       }
       setForm({ ...empty, companyId });
       setEditId(null);
@@ -114,15 +109,7 @@ export default function Sellers() {
         onEdit={startEdit}
         onDelete={handleDelete}
         onToggleCopilot={toggleCopilot}
-        onConnectWhatsApp={(s) => setQrSellerId(s.id)}
       />
-      {qrSellerId && (
-        <WhatsAppConnect
-          sellerId={qrSellerId}
-          onConnected={load}
-          onClose={() => setQrSellerId(null)}
-        />
-      )}
     </div>
   );
 }

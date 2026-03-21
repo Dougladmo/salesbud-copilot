@@ -8,7 +8,6 @@ import { AgentService } from './services/agent.service.js';
 import { MessageBufferService } from './services/message-buffer.service.js';
 import { TranscriptionService } from './services/transcription.service.js';
 import { WhatsappService } from './services/whatsapp.service.js';
-import { EvolutionService } from './services/evolution.service.js';
 import { CalendarService } from './services/calendar.service.js';
 
 container.registerSingleton(CompanyService);
@@ -19,7 +18,6 @@ container.registerSingleton(AgentService);
 container.registerSingleton(MessageBufferService);
 container.registerSingleton(TranscriptionService);
 container.registerSingleton(WhatsappService);
-container.registerSingleton(EvolutionService);
 container.registerSingleton(CalendarService);
 
 export { container };
