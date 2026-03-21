@@ -1,4 +1,4 @@
-import { NavLink, Navigate, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Navigate, Outlet } from 'react-router-dom';
 import { UserButton, useOrganization, useUser } from '@clerk/clerk-react';
 import { useSeller } from '../context/SellerContext';
 
@@ -7,7 +7,6 @@ const navItems = [
 ];
 
 export default function AdminLayout() {
-  const navigate = useNavigate();
   const { seller } = useSeller();
   const { membership, isLoaded } = useOrganization();
   const { user } = useUser();
@@ -55,13 +54,6 @@ export default function AdminLayout() {
         </nav>
 
         <div className="mt-auto pt-4 border-t border-white/10 space-y-3">
-          <button
-            onClick={() => navigate('/seller/copilot')}
-            className="w-full flex items-center gap-3 px-4 py-2 rounded-full text-xs text-white/40 hover:text-white/70 hover:bg-white/5 transition cursor-pointer bg-transparent border-none"
-          >
-            <span>↩️</span>
-            Voltar ao Copilot
-          </button>
           <div className="flex items-center gap-3 px-4">
             <UserButton
               afterSignOutUrl="/sign-in"
