@@ -44,7 +44,7 @@ export const companies = {
   create: (data: CreateCompanyDto) =>
     request<Company>('/companies', { method: 'POST', body: JSON.stringify(data) }),
   update: (id: string, data: Partial<CreateCompanyDto>) =>
-    request<Company>(`/companies/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+    request<Company>(`/companies/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id: string) =>
     request<void>(`/companies/${id}`, { method: 'DELETE' }),
   listDocuments: (companyId: string) =>
@@ -124,7 +124,7 @@ export const sellers = {
   create: (data: CreateSellerDto) =>
     request<Seller>('/sellers', { method: 'POST', body: JSON.stringify(data) }),
   update: (id: string, data: Partial<CreateSellerDto>) =>
-    request<Seller>(`/sellers/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+    request<Seller>(`/sellers/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id: string) =>
     request<void>(`/sellers/${id}`, { method: 'DELETE' }),
   listDocuments: (sellerId: string) =>
@@ -137,12 +137,12 @@ export const sellers = {
   deleteDocument: (sellerId: string, documentId: string) =>
     request<void>(`/sellers/${sellerId}/documents/${documentId}`, { method: 'DELETE' }),
   toggleActive: (id: string, isActive: boolean) =>
-    request<Seller>(`/sellers/${id}`, { method: 'PATCH', body: JSON.stringify({ isActive }) }),
+    request<Seller>(`/sellers/${id}`, { method: 'PUT', body: JSON.stringify({ isActive }) }),
 };
 
 export const leads = {
   findByJid: (sellerId: string, remoteJid: string) =>
     request<Lead | null>(`/sellers/${sellerId}/leads/by-jid/${encodeURIComponent(remoteJid)}`),
   update: (id: string, data: Partial<Lead>) =>
-    request<Lead>(`/leads/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+    request<Lead>(`/leads/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
 };

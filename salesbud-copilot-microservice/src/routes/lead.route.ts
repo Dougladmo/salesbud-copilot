@@ -10,7 +10,7 @@ const router = Router();
 router.post('/', validate(createLeadSchema), catchAsync(leadController.create));
 router.get('/', catchAsync(leadController.findAll));
 router.get('/:id', uuidParam('id'), catchAsync(leadController.findOne));
-router.patch('/:id', uuidParam('id'), validate(updateLeadSchema), catchAsync(leadController.update));
+router.put('/:id', uuidParam('id'), validate(updateLeadSchema), catchAsync(leadController.update));
 router.delete('/:id', uuidParam('id'), catchAsync(leadController.remove));
 
 export { router as leadRoutes };

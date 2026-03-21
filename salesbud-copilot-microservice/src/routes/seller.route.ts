@@ -10,7 +10,7 @@ const router = Router();
 router.post('/', validate(createSellerSchema), catchAsync(sellerController.create));
 router.get('/', catchAsync(sellerController.findAll));
 router.get('/:id', uuidParam('id'), catchAsync(sellerController.findOne));
-router.patch('/:id', uuidParam('id'), validate(updateSellerSchema), catchAsync(sellerController.update));
+router.put('/:id', uuidParam('id'), validate(updateSellerSchema), catchAsync(sellerController.update));
 router.delete('/:id', uuidParam('id'), catchAsync(sellerController.remove));
 
 export { router as sellerRoutes };
