@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { sellers, companies } from '../../api/client';
-import type { Seller, CreateSellerDto, Company } from '../../types';
+import { sellers } from '../../api/client';
+import type { Seller, CreateSellerDto } from '../../types';
+import { useSeller } from '../../context/SellerContext';
 import { SellerForm } from '../../components/sellers/SellerForm';
 import { SellerTable } from '../../components/sellers/SellerTable';
 
@@ -12,18 +13,23 @@ const empty: CreateSellerDto = {
 };
 
 export default function Sellers() {
+  const { seller: currentSeller } = useSeller();
+  const companyId = currentSeller?.companyId || '';
+
   const [list, setList] = useState<Seller[]>([]);
-  const [companyList, setCompanyList] = useState<Company[]>([]);
-  const [form, setForm] = useState<CreateSellerDto>(empty);
+  const [form, setForm] = useState<CreateSellerDto>({ ...empty, companyId });
   const [editId, setEditId] = useState<string | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const load = () => {
-    sellers.list().then(setList).catch((e) => toast.error(e.message));
-    companies.list().then(setCompanyList).catch((e) => toast.error(e instanceof Error ? e.message : 'Erro ao carregar empresas'));
+    sellers.list()
+      .then((all) => setList(all.filter((s) => s.companyId === companyId)))
+      .catch((e) => toast.error(e.message));
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    if (companyId) load();
+  }, [companyId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,10 +39,10 @@ export default function Sellers() {
         await sellers.update(editId, rest);
         toast.success('Vendedor atualizado!');
       } else {
-        await sellers.create(form);
+        await sellers.create({ ...form, companyId });
         toast.success('Vendedor criado!');
       }
-      setForm(empty);
+      setForm({ ...empty, companyId });
       setEditId(null);
       setShowAdvanced(false);
       load();
@@ -86,15 +92,17 @@ export default function Sellers() {
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold text-navy mb-5">Vendedores</h2>
+      <h2 className="text-2xl font-semibold text-navy mb-2">Vendedores</h2>
+      <p className="text-text-muted text-sm mb-5">
+        Gerencie os vendedores de <strong>{currentSeller?.company?.name}</strong>.
+      </p>
       <SellerForm
         form={form}
         editId={editId}
-        companyList={companyList}
         showAdvanced={showAdvanced}
         onSubmit={handleSubmit}
         onChange={(partial) => setForm({ ...form, ...partial })}
-        onCancel={() => { setEditId(null); setForm(empty); setShowAdvanced(false); }}
+        onCancel={() => { setEditId(null); setForm({ ...empty, companyId }); setShowAdvanced(false); }}
         onToggleAdvanced={() => setShowAdvanced(!showAdvanced)}
       />
       <SellerTable

@@ -1,8 +1,10 @@
 import { injectable } from 'tsyringe';
 import { Pinecone } from '@pinecone-database/pinecone';
 import OpenAI from 'openai';
+import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
 import { env } from '../config/env.js';
 import { logger } from '../config/logger.js';
+import { AppError } from '../utils/app-error.js';
 
 export interface RagResult {
   text: string;
@@ -15,6 +17,7 @@ export class RagService {
   private readonly pinecone: Pinecone;
   private index!: ReturnType<Pinecone['Index']>;
   private readonly openai: OpenAI;
+  private readonly textSplitter: RecursiveCharacterTextSplitter;
   private indexReady = false;
 
   constructor() {
@@ -22,6 +25,11 @@ export class RagService {
     this.openai = new OpenAI({
       apiKey: env.OPENROUTER_API_KEY,
       baseURL: 'https://openrouter.ai/api/v1',
+    });
+    this.textSplitter = new RecursiveCharacterTextSplitter({
+      chunkSize: 800,
+      chunkOverlap: 200,
+      separators: ['\n\n', '\n', '. ', ', ', ' ', ''],
     });
     logger.info('Pinecone and OpenRouter initialized');
   }
@@ -42,6 +50,8 @@ export class RagService {
         });
         logger.info(`Index "${env.PINECONE_INDEX}" created, waiting for ready state...`);
         await this.waitForIndex();
+      } else if (err?.name === 'PineconeConnectionError') {
+        throw new AppError('Pinecone service is unavailable. Please try again later.', 503);
       } else {
         throw err;
       }
@@ -116,19 +126,39 @@ export class RagService {
     metadata: Record<string, any> = {},
   ): Promise<void> {
     await this.ensureIndex();
-    const embedding = await this.generateEmbedding(text);
 
-    await this.index.namespace(namespace).upsert({
-      records: [
-        {
-          id: documentId,
-          values: embedding,
-          metadata: { ...metadata, text },
+    const chunks = await this.textSplitter.splitText(text);
+
+    if (chunks.length === 0) {
+      throw new AppError('Document text is empty or could not be split.', 400);
+    }
+
+    const BATCH_SIZE = 50;
+    for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
+      const batch = chunks.slice(i, i + BATCH_SIZE);
+
+      const embeddings = await Promise.all(
+        batch.map((chunk) => this.generateEmbedding(chunk)),
+      );
+
+      const records = batch.map((chunk, j) => ({
+        id: `${documentId}#chunk-${i + j}`,
+        values: embeddings[j],
+        metadata: {
+          ...metadata,
+          text: chunk,
+          documentId,
+          chunkIndex: i + j,
+          totalChunks: chunks.length,
         },
-      ],
-    });
+      }));
 
-    logger.info(`Document upserted: ns=${namespace} id=${documentId}`);
+      await this.index.namespace(namespace).upsert({ records });
+    }
+
+    logger.info(
+      `Document upserted: ns=${namespace} id=${documentId} chunks=${chunks.length}`,
+    );
   }
 
   async listDocuments(namespace: string): Promise<{ id: string; text: string; metadata: Record<string, any> }[]> {
@@ -150,22 +180,59 @@ export class RagService {
     if (ids.length === 0) return [];
 
     const fetched = await this.index.namespace(namespace).fetch({ ids });
-    const docs: { id: string; text: string; metadata: Record<string, any> }[] = [];
+    const grouped = new Map<string, { chunks: string[]; metadata: Record<string, any> }>();
 
-    for (const [id, record] of Object.entries(fetched.records || {})) {
-      if (record?.metadata) {
-        const { text, ...rest } = record.metadata as Record<string, any>;
-        docs.push({ id, text: text || '', metadata: rest });
+    for (const [, record] of Object.entries(fetched.records || {})) {
+      if (!record?.metadata) continue;
+      const meta = record.metadata as Record<string, any>;
+      const docId = (meta.documentId as string) || record.id!;
+      const chunkText = (meta.text as string) || '';
+
+      if (!grouped.has(docId)) {
+        const { text, documentId, chunkIndex, totalChunks, ...rest } = meta;
+        grouped.set(docId, { chunks: [], metadata: rest });
       }
+
+      const entry = grouped.get(docId)!;
+      const idx = (meta.chunkIndex as number) ?? 0;
+      entry.chunks[idx] = chunkText;
     }
 
-    return docs;
+    return Array.from(grouped.entries()).map(([id, { chunks, metadata }]) => ({
+      id,
+      text: chunks.filter(Boolean).join('\n\n'),
+      metadata,
+    }));
   }
 
   async deleteDocument(namespace: string, documentId: string): Promise<void> {
     await this.ensureIndex();
-    await this.index.namespace(namespace).deleteOne({ id: documentId });
-    logger.info(`Document deleted: ns=${namespace} id=${documentId}`);
+    const ns = this.index.namespace(namespace);
+
+    const idsToDelete: string[] = [];
+    let paginationToken: string | undefined;
+
+    do {
+      const page = await ns.listPaginated({
+        prefix: `${documentId}#chunk-`,
+        limit: 100,
+        paginationToken,
+      });
+      if (page.vectors) {
+        for (const v of page.vectors) {
+          if (v.id) idsToDelete.push(v.id);
+        }
+      }
+      paginationToken = page.pagination?.next;
+    } while (paginationToken);
+
+    // Fallback for documents stored before chunking (single vector with bare UUID)
+    if (idsToDelete.length === 0) {
+      idsToDelete.push(documentId);
+    }
+
+    await ns.deleteMany({ ids: idsToDelete });
+    logger.info(`Document deleted: ns=${namespace} id=${documentId} vectors=${idsToDelete.length}`);
   }
 
   async deleteAllDocuments(namespace: string): Promise<void> {

@@ -1,4 +1,4 @@
-import type { CreateSellerDto, Company } from '../../types';
+import type { CreateSellerDto } from '../../types';
 import { SellerAdvancedFields } from './SellerAdvancedFields';
 
 const inputCls = 'bg-white border border-border rounded-lg px-3 py-2 text-sm text-navy outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition';
@@ -8,7 +8,6 @@ const btnSecondary = 'bg-surface-hover text-text-muted px-5 py-2 rounded-full te
 export function SellerForm({
   form,
   editId,
-  companyList,
   showAdvanced,
   onSubmit,
   onChange,
@@ -17,7 +16,6 @@ export function SellerForm({
 }: {
   form: CreateSellerDto;
   editId: string | null;
-  companyList: Company[];
   showAdvanced: boolean;
   onSubmit: (e: React.FormEvent) => void;
   onChange: (partial: Partial<CreateSellerDto>) => void;
@@ -29,14 +27,7 @@ export function SellerForm({
       <h3 className="text-sm font-semibold text-text-muted mb-4 uppercase tracking-wide">
         {editId ? 'Editar Vendedor' : 'Novo Vendedor'}
       </h3>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted">
-          Empresa
-          <select className={inputCls} value={form.companyId} onChange={(e) => onChange({ companyId: e.target.value })} required disabled={!!editId}>
-            <option value="">Selecione...</option>
-            {companyList.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-        </label>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted">
           Nome
           <input className={inputCls} value={form.name} onChange={(e) => onChange({ name: e.target.value })} required />

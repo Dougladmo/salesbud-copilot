@@ -1,13 +1,17 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate, Navigate } from 'react-router-dom';
+import { useSeller } from '../context/SellerContext';
 
 const navItems = [
-  { to: '/admin/companies', label: 'Empresas', icon: '🏢' },
   { to: '/admin/sellers', label: 'Vendedores', icon: '👤' },
   { to: '/admin/documents', label: 'Documentos', icon: '📄' },
 ];
 
 export default function AdminLayout() {
   const navigate = useNavigate();
+  const { seller, loading } = useSeller();
+
+  if (loading) return null;
+  if (!seller) return <Navigate to="/" replace />;
 
   return (
     <div className="flex min-h-screen bg-white">
@@ -15,7 +19,10 @@ export default function AdminLayout() {
         <h1 className="text-xl font-bold text-white mb-1 px-2 tracking-tight">
           Sales<span className="text-accent">bud</span>
         </h1>
-        <p className="text-[10px] text-white/30 px-2 mb-6 uppercase tracking-widest">Admin</p>
+        <p className="text-[10px] text-white/30 px-2 mb-1 uppercase tracking-widest">Admin</p>
+        <p className="text-xs text-white/50 px-2 mb-6 truncate" title={seller.company?.name}>
+          {seller.company?.name}
+        </p>
 
         <nav className="flex flex-col gap-1 flex-1">
           {navItems.map(({ to, label, icon }) => (
@@ -38,11 +45,11 @@ export default function AdminLayout() {
 
         <div className="mt-auto pt-4 border-t border-white/10">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/seller/copilot')}
             className="w-full flex items-center gap-3 px-4 py-2 rounded-full text-xs text-white/40 hover:text-white/70 hover:bg-white/5 transition cursor-pointer bg-transparent border-none"
           >
             <span>↩️</span>
-            Voltar ao Vendedor
+            Voltar ao Copilot
           </button>
         </div>
       </aside>

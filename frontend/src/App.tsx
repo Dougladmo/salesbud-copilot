@@ -6,7 +6,6 @@ import SellerLayout from './components/SellerLayout';
 import AdminLayout from './components/AdminLayout';
 import SellerSelect from './pages/seller/SellerSelect';
 import Copilot from './pages/seller/Copilot';
-import Companies from './pages/admin/Companies';
 import Sellers from './pages/admin/Sellers';
 import Documents from './pages/admin/Documents';
 
@@ -28,8 +27,7 @@ export default function App() {
 
           {/* Admin area */}
           <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<Navigate to="/admin/companies" replace />} />
-            <Route path="companies" element={<Companies />} />
+            <Route index element={<Navigate to="/admin/sellers" replace />} />
             <Route path="sellers" element={<Sellers />} />
             <Route path="documents" element={<Documents />} />
           </Route>

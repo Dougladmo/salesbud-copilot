@@ -30,7 +30,6 @@ export function SellerTable({
             <tr>
               <th className="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Nome</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Agente</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Empresa</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Copilot</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Personalidade</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Ações</th>
@@ -41,7 +40,6 @@ export function SellerTable({
               <tr key={s.id} className="border-t border-border hover:bg-surface-hover transition">
                 <td className="px-4 py-3 text-sm text-navy font-medium">{s.name}</td>
                 <td className="px-4 py-3 text-sm text-text-muted">{s.agentName}</td>
-                <td className="px-4 py-3 text-sm text-text-muted">{s.company?.name || s.companyId.slice(0, 8)}</td>
                 <td className="px-4 py-3">
                   <button
                     className={`px-3 py-1 rounded-full text-xs font-bold transition cursor-pointer ${
@@ -72,7 +70,7 @@ export function SellerTable({
             ))}
             {list.length === 0 && (
               <tr>
-                <td colSpan={6} className="text-center py-8 text-text-muted text-sm">
+                <td colSpan={5} className="text-center py-8 text-text-muted text-sm">
                   Nenhum vendedor cadastrado
                 </td>
               </tr>
