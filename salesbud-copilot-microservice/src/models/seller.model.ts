@@ -20,6 +20,9 @@ export class Seller {
   @JoinColumn({ name: 'company_id' })
   company: Company;
 
+  @Column({ type: 'varchar', name: 'clerk_user_id', unique: true, nullable: true })
+  clerkUserId: string | null;
+
   @Column({ type: 'varchar' })
   name: string;
 

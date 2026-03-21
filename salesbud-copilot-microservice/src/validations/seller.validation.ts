@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 export const createSellerSchema = z.object({
   companyId: z.string().uuid(),
+  clerkUserId: z.string().optional(),
   name: z.string().min(1),
   agentName: z.string().min(1),
   pineconeNamespace: z.string().optional(),

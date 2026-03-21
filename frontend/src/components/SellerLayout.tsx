@@ -1,16 +1,10 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { UserButton } from '@clerk/clerk-react';
 import { useSeller } from '../context/SellerContext';
-import { useEffect } from 'react';
 
 export default function SellerLayout() {
-  const { seller, setSellerId, loading } = useSeller();
+  const { seller, loading } = useSeller();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!loading && !seller) {
-      navigate('/');
-    }
-  }, [seller, loading, navigate]);
 
   if (loading || !seller) {
     return (
@@ -63,13 +57,10 @@ export default function SellerLayout() {
             <span>⚙️</span>
             Painel Admin
           </button>
-          <button
-            onClick={() => { setSellerId(null); navigate('/'); }}
-            className="w-full flex items-center gap-3 px-4 py-2 rounded-full text-xs text-white/40 hover:text-white/70 hover:bg-white/5 transition cursor-pointer bg-transparent border-none"
-          >
-            <span>↩️</span>
-            Trocar Vendedor
-          </button>
+          <div className="flex items-center gap-3 px-4 pt-2">
+            <UserButton afterSignOutUrl="/sign-in" />
+            <span className="text-xs text-white/40">Conta</span>
+          </div>
         </div>
       </aside>
       <main className="flex-1 ml-64 p-8 max-w-4xl">

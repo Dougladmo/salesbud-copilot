@@ -1,10 +1,18 @@
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
+let tokenGetter: (() => Promise<string | null>) | null = null;
+
+export function setTokenGetter(getter: () => Promise<string | null>) {
+  tokenGetter = getter;
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const token = tokenGetter ? await tokenGetter() : null;
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options?.headers,
     },
   });
@@ -47,6 +55,10 @@ export const companies = {
     ),
   deleteDocument: (companyId: string, documentId: string) =>
     request<void>(`/companies/${companyId}/documents/${documentId}`, { method: 'DELETE' }),
+};
+
+export const auth = {
+  me: () => request<Seller>('/me'),
 };
 
 export const sellers = {

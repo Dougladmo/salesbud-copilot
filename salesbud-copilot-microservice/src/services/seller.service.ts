@@ -34,6 +34,13 @@ export class SellerService {
     return this.repo.save(seller);
   }
 
+  async findByClerkUserId(clerkUserId: string): Promise<Seller | null> {
+    return this.repo.findOne({
+      where: { clerkUserId },
+      relations: ['company'],
+    });
+  }
+
   async remove(id: string): Promise<void> {
     const seller = await this.findOne(id);
     await this.repo.remove(seller);

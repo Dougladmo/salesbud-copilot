@@ -1,4 +1,5 @@
-import { NavLink, Outlet, useNavigate, Navigate } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { UserButton } from '@clerk/clerk-react';
 import { useSeller } from '../context/SellerContext';
 
 const navItems = [
@@ -8,10 +9,7 @@ const navItems = [
 
 export default function AdminLayout() {
   const navigate = useNavigate();
-  const { seller, loading } = useSeller();
-
-  if (loading) return null;
-  if (!seller) return <Navigate to="/" replace />;
+  const { seller } = useSeller();
 
   return (
     <div className="flex min-h-screen bg-white">
@@ -20,8 +18,8 @@ export default function AdminLayout() {
           Sales<span className="text-accent">bud</span>
         </h1>
         <p className="text-[10px] text-white/30 px-2 mb-1 uppercase tracking-widest">Admin</p>
-        <p className="text-xs text-white/50 px-2 mb-6 truncate" title={seller.company?.name}>
-          {seller.company?.name}
+        <p className="text-xs text-white/50 px-2 mb-6 truncate" title={seller?.company?.name}>
+          {seller?.company?.name}
         </p>
 
         <nav className="flex flex-col gap-1 flex-1">
@@ -43,7 +41,7 @@ export default function AdminLayout() {
           ))}
         </nav>
 
-        <div className="mt-auto pt-4 border-t border-white/10">
+        <div className="mt-auto pt-4 border-t border-white/10 space-y-3">
           <button
             onClick={() => navigate('/seller/copilot')}
             className="w-full flex items-center gap-3 px-4 py-2 rounded-full text-xs text-white/40 hover:text-white/70 hover:bg-white/5 transition cursor-pointer bg-transparent border-none"
@@ -51,6 +49,10 @@ export default function AdminLayout() {
             <span>↩️</span>
             Voltar ao Copilot
           </button>
+          <div className="flex items-center gap-3 px-4">
+            <UserButton afterSignOutUrl="/sign-in" />
+            <span className="text-xs text-white/40">Conta</span>
+          </div>
         </div>
       </aside>
       <main className="flex-1 ml-60 p-8 max-w-5xl">

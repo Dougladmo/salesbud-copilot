@@ -1,12 +1,12 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { sellers } from '../api/client';
+import { useAuth } from '@clerk/clerk-react';
+import { sellers, auth } from '../api/client';
 import type { Seller } from '../types';
 
 interface SellerContextType {
   seller: Seller | null;
   setSellerId: (id: string | null) => void;
   reload: () => void;
-  /** Silently refresh seller data without showing loading state */
   silentReload: () => void;
   loading: boolean;
 }
@@ -20,42 +20,55 @@ const SellerContext = createContext<SellerContextType>({
 });
 
 export function SellerProvider({ children }: { children: ReactNode }) {
-  const [sellerId, setSellerId] = useState<string | null>(() => localStorage.getItem('sellerId'));
+  const { isSignedIn, isLoaded } = useAuth();
   const [seller, setSeller] = useState<Seller | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const load = async (id: string) => {
+  const loadById = async (id: string) => {
     setLoading(true);
     try {
       const data = await sellers.get(id);
       setSeller(data);
     } catch {
       setSeller(null);
-      setSellerId(null);
-      localStorage.removeItem('sellerId');
     } finally {
       setLoading(false);
     }
   };
 
+  // Auto-load seller linked to Clerk user
   useEffect(() => {
-    if (sellerId) {
-      localStorage.setItem('sellerId', sellerId);
-      load(sellerId);
+    if (!isLoaded || !isSignedIn) {
+      setSeller(null);
+      return;
+    }
+
+    setLoading(true);
+    auth.me().then((mySeller) => {
+      setSeller(mySeller);
+    }).catch(() => {
+      setSeller(null);
+    }).finally(() => {
+      setLoading(false);
+    });
+  }, [isLoaded, isSignedIn]);
+
+  const setSellerId = (id: string | null) => {
+    if (id) {
+      loadById(id);
     } else {
-      localStorage.removeItem('sellerId');
       setSeller(null);
     }
-  }, [sellerId]);
+  };
 
   const reload = () => {
-    if (sellerId) load(sellerId);
+    if (seller?.id) loadById(seller.id);
   };
 
   const silentReload = async () => {
-    if (!sellerId) return;
+    if (!seller?.id) return;
     try {
-      const data = await sellers.get(sellerId);
+      const data = await sellers.get(seller.id);
       setSeller(data);
     } catch { /* keep current seller on silent reload failure */ }
   };
