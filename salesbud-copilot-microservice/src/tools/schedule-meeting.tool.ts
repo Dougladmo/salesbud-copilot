@@ -1,15 +1,18 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import type { CalendarService } from '../services/calendar.service.js';
+import type { LeadService } from '../services/lead.service.js';
 import {
   CalendarAuthError,
   CalendarConflictError,
   CalendarApiError,
 } from '../utils/calendar-errors.js';
+import { LeadStatus } from '../models/lead.model.js';
 import { logger } from '../config/logger.js';
 
 export function createScheduleMeetingTool(
   calendarService: CalendarService,
+  leadService: LeadService,
   sellerId: string,
   clerkUserId: string,
   contactJid: string,
@@ -72,6 +75,17 @@ export function createScheduleMeetingTool(
           timezone,
           attendeeEmail: attendee_email,
         });
+
+        // Auto-update lead status to SCHEDULED
+        try {
+          const lead = await leadService.findBySellerAndJid(sellerId, contactJid);
+          if (lead && lead.status !== LeadStatus.CONVERTED) {
+            await leadService.update(lead.id, { status: LeadStatus.SCHEDULED });
+            logger.info(`Lead status auto-updated to SCHEDULED: seller=${sellerId} jid=${contactJid}`);
+          }
+        } catch (statusError: any) {
+          logger.warn(`Failed to auto-update lead status: ${statusError.message}`);
+        }
 
         const parts = [
           'Reunião agendada com sucesso!',

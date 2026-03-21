@@ -76,6 +76,7 @@ export class AgentService {
         ),
         createScheduleMeetingTool(
           this.calendarService,
+          this.leadService,
           sellerId,
           seller.clerkUserId,
           remoteJid,

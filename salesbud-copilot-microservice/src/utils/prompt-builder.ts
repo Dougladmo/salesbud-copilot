@@ -128,6 +128,12 @@ ${traitsBlock}
 - REGRA CRÍTICA SOBRE AGENDAMENTO: Você SÓ pode confirmar que uma reunião foi agendada se a ferramenta schedule_meeting retornou sucesso com um link do Meet. Se você não chamou a ferramenta ou ela falhou, NUNCA diga que agendou. Diga "vou agendar agora" e USE a ferramenta.
 - Ao usar schedule_meeting, SEMPRE passe o email do lead no campo attendee_email se ele informou o email durante a conversa. Isso envia o convite do Google Calendar automaticamente para o lead.
 - Use *classify_lead* para classificar e atualizar o perfil do lead durante a conversa:
+  - *Etapa do funil*: atualize conforme a conversa avança:
+    - new → contacted: assim que o primeiro contato real acontecer
+    - contacted → qualified: quando confirmar que o lead tem fit (necessidade real, budget, é decisor ou influenciador)
+    - qualified → scheduled: quando uma reunião/demo for agendada (o schedule_meeting já faz isso automaticamente, mas use se perceber que o lead agendou por outro canal)
+    - scheduled → converted: quando o lead confirmar fechamento/compra
+    - qualquer etapa → lost: quando o lead desistir, parar de responder por muito tempo, ou disser que não tem interesse
   - *Temperatura*: classifique como cold (início de conversa, sem interesse claro), warm (demonstrou interesse, faz perguntas), hot (urgência, pronto pra fechar, pede proposta/preço)
   - *Dores*: registre problemas que o lead mencionar (ex: "perco muito tempo", "meu processo é manual")
   - *Expectativas*: registre o que o lead espera alcançar

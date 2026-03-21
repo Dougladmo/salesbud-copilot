@@ -1,7 +1,7 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import type { LeadService } from '../services/lead.service.js';
-import { LeadTemperature } from '../models/lead.model.js';
+import { LeadTemperature, LeadStatus } from '../models/lead.model.js';
 import { logger } from '../config/logger.js';
 
 export function createClassifyLeadTool(
@@ -14,6 +14,12 @@ export function createClassifyLeadTool(
     description:
       'Classifica o lead com base na conversa. Use após identificar informações relevantes como: nível de interesse (temperatura), dores, expectativas, interesses, objeções, orçamento, prazo ou se é decisor. Atualize SEMPRE que perceber mudança no perfil do lead.',
     schema: z.object({
+      status: z
+        .enum(['new', 'contacted', 'qualified', 'scheduled', 'converted', 'lost'])
+        .optional()
+        .describe(
+          'Etapa do funil de vendas: new = lead acabou de chegar, contacted = primeiro contato feito, qualified = lead qualificado (tem fit, budget, decisor), scheduled = reunião/demo agendada, converted = negócio fechado, lost = lead perdido/desistiu',
+        ),
       temperature: z
         .enum(['cold', 'warm', 'hot'])
         .optional()
@@ -54,6 +60,7 @@ export function createClassifyLeadTool(
         .describe('Resumo curto da qualificação atual do lead em 1-2 frases'),
     }),
     func: async ({
+      status,
       temperature,
       pain_points,
       expectations,
@@ -72,6 +79,7 @@ export function createClassifyLeadTool(
 
         const updates: Record<string, unknown> = {};
 
+        if (status) updates.status = status as LeadStatus;
         if (temperature) updates.temperature = temperature as LeadTemperature;
         if (pain_points?.length) updates.painPoints = mergeLists(lead.painPoints, pain_points);
         if (expectations?.length) updates.expectations = mergeLists(lead.expectations, expectations);
@@ -91,6 +99,7 @@ export function createClassifyLeadTool(
         logger.info(`Lead classified: seller=${sellerId} jid=${remoteJid} updates=${JSON.stringify(updates)}`);
 
         const parts: string[] = [];
+        if (status) parts.push(`etapa: ${status}`);
         if (temperature) parts.push(`temperatura: ${temperature}`);
         if (pain_points?.length) parts.push(`dores: ${pain_points.join(', ')}`);
         if (expectations?.length) parts.push(`expectativas: ${expectations.join(', ')}`);

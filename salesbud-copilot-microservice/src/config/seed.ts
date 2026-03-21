@@ -17,7 +17,7 @@ export async function seedDatabase(): Promise<void> {
   if (!company) {
     company = companyRepo.create({
       id: env.DEFAULT_COMPANY_ID,
-      name: 'SalesBud Demo',
+      name: 'SalesBud',
       pineconeNamespace: 'salesbud-demo',
     });
     company = await companyRepo.save(company);
