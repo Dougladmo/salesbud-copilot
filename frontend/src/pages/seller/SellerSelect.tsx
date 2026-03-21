@@ -33,13 +33,7 @@ export default function SellerSelect() {
           <p className="text-center text-text-muted text-sm">Carregando...</p>
         ) : list.length === 0 ? (
           <div className="bg-surface border border-border rounded-xl p-6 text-center">
-            <p className="text-text-muted text-sm mb-4">Nenhum vendedor cadastrado.</p>
-            <button
-              className="bg-navy-dark text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-navy-light transition cursor-pointer"
-              onClick={() => navigate('/admin')}
-            >
-              Ir para Admin
-            </button>
+            <p className="text-text-muted text-sm">Nenhum vendedor encontrado. Execute o seed do backend para criar vendedores.</p>
           </div>
         ) : (
           <div className="space-y-3">

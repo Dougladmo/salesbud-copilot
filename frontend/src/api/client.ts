@@ -25,10 +25,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 import type {
-  Company,
-  CreateCompanyDto,
   Seller,
-  CreateSellerDto,
   Lead,
 } from '../types';
 
@@ -39,14 +36,6 @@ export interface DocumentRecord {
 }
 
 export const companies = {
-  list: () => request<Company[]>('/companies'),
-  get: (id: string) => request<Company>(`/companies/${id}`),
-  create: (data: CreateCompanyDto) =>
-    request<Company>('/companies', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id: string, data: Partial<CreateCompanyDto>) =>
-    request<Company>(`/companies/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  delete: (id: string) =>
-    request<void>(`/companies/${id}`, { method: 'DELETE' }),
   listDocuments: (companyId: string) =>
     request<DocumentRecord[]>(`/companies/${companyId}/documents`),
   uploadDocument: (companyId: string, text: string, metadata?: Record<string, unknown>) =>
@@ -121,12 +110,8 @@ export const chat = {
 export const sellers = {
   list: () => request<Seller[]>('/sellers'),
   get: (id: string) => request<Seller>(`/sellers/${id}`),
-  create: (data: CreateSellerDto) =>
-    request<Seller>('/sellers', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id: string, data: Partial<CreateSellerDto>) =>
+  update: (id: string, data: Partial<Seller>) =>
     request<Seller>(`/sellers/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  delete: (id: string) =>
-    request<void>(`/sellers/${id}`, { method: 'DELETE' }),
   listDocuments: (sellerId: string) =>
     request<DocumentRecord[]>(`/sellers/${sellerId}/documents`),
   uploadDocument: (sellerId: string, text: string, metadata?: Record<string, unknown>) =>

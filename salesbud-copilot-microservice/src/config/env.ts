@@ -15,7 +15,7 @@ const envSchema = z.object({
   WEBHOOK_BASE_URL: z.string().default('http://localhost:3000'),
   CLERK_PUBLISHABLE_KEY: z.string().min(1),
   CLERK_SECRET_KEY: z.string().min(1),
-  CLERK_WEBHOOK_SIGNING_SECRET: z.string().min(1),
+  CLERK_WEBHOOK_SIGNING_SECRET: z.string().default(''),
   DEFAULT_COMPANY_ID: z.string().uuid(),
   SEED_SELLER_CLERK_USER_ID: z.string().min(1),
 });

@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { companyRoutes } from './company.route.js';
 import { sellerRoutes } from './seller.route.js';
 import { leadRoutes } from './lead.route.js';
 import { ragRoutes } from './rag.route.js';
@@ -13,7 +12,6 @@ import { meRoutes } from './me.route.js';
 const router = Router();
 
 router.use('/me', meRoutes);
-router.use('/companies', requireApiAuth, companyRoutes);
 router.use('/sellers', requireApiAuth, sellerRoutes);
 router.use('/leads', requireApiAuth, leadRoutes);
 router.use('/', requireApiAuth, ragRoutes);

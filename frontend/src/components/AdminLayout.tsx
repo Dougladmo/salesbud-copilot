@@ -3,7 +3,6 @@ import { UserButton, useOrganization, useUser } from '@clerk/clerk-react';
 import { useSeller } from '../context/SellerContext';
 
 const navItems = [
-  { to: '/admin/sellers', label: 'Vendedores', icon: '👤' },
   { to: '/admin/documents', label: 'Documentos', icon: '📄' },
 ];
 

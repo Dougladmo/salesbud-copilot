@@ -6,11 +6,6 @@ export interface Company {
   updatedAt: string;
 }
 
-export interface CreateCompanyDto {
-  name: string;
-  pineconeNamespace: string;
-}
-
 export type TraitFormality = 'formal' | 'informal';
 export type TraitHumor = 'humorous' | 'serious';
 export type TraitCommunication = 'direct' | 'detailed';
@@ -35,21 +30,6 @@ export interface Seller {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
-}
-
-export interface CreateSellerDto {
-  companyId: string;
-  name: string;
-  agentName: string;
-  pineconeNamespace?: string;
-  traitFormality?: TraitFormality;
-  traitHumor?: TraitHumor;
-  traitCommunication?: TraitCommunication;
-  traitEmpathy?: TraitEmpathy;
-  traitSelling?: TraitSelling;
-  customPrompt?: string;
-  maxMemoryMessages?: number;
-  isActive?: boolean;
 }
 
 export type LeadStatus = 'new' | 'contacted' | 'qualified' | 'scheduled' | 'converted' | 'lost';
