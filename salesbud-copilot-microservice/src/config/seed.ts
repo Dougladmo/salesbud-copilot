@@ -77,11 +77,13 @@ async function configureWebhook(seller: Seller): Promise<void> {
     await axios.post(
       `${env.EVOLUTION_API_URL}/webhook/set/${instanceName}`,
       {
-        enabled: true,
-        url: webhookUrl,
-        webhookByEvents: true,
-        webhookBase64: false,
-        events: ['MESSAGES_UPSERT', 'CONNECTION_UPDATE'],
+        webhook: {
+          enabled: true,
+          url: webhookUrl,
+          webhookByEvents: true,
+          webhookBase64: false,
+          events: ['MESSAGES_UPSERT', 'CONNECTION_UPDATE'],
+        },
       },
       {
         headers: {
@@ -92,6 +94,13 @@ async function configureWebhook(seller: Seller): Promise<void> {
     );
     logger.info(`Webhook configured: ${webhookUrl}`);
   } catch (error) {
-    logger.error(`Failed to configure webhook: ${error}`);
+    if (axios.isAxiosError(error)) {
+      logger.error(
+        { status: error.response?.status, data: error.response?.data, url: `${env.EVOLUTION_API_URL}/webhook/set/${instanceName}` },
+        `Failed to configure webhook for ${webhookUrl}`,
+      );
+    } else {
+      logger.error(`Failed to configure webhook: ${error}`);
+    }
   }
 }
