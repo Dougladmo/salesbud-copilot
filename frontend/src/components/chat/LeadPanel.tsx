@@ -1,6 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Snowflake, Sun, Flame } from 'lucide-react';
 import { leads } from '../../api/client';
 import type { Lead, LeadStatus, LeadTemperature } from '../../types';
+import type { LucideIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Label } from '@/components/ui/label';
 
 const statusLabels: Record<LeadStatus, string> = {
   new: 'Novo',
@@ -20,10 +29,10 @@ const statusColors: Record<LeadStatus, string> = {
   lost: 'bg-red-100 text-red-700',
 };
 
-const temperatureConfig: Record<LeadTemperature, { label: string; color: string; icon: string }> = {
-  cold: { label: 'Frio', color: 'bg-blue-500', icon: '❄️' },
-  warm: { label: 'Morno', color: 'bg-yellow-500', icon: '☀️' },
-  hot: { label: 'Quente', color: 'bg-red-500', icon: '🔥' },
+const temperatureConfig: Record<LeadTemperature, { label: string; color: string; icon: LucideIcon }> = {
+  cold: { label: 'Frio', color: 'bg-blue-500', icon: Snowflake },
+  warm: { label: 'Morno', color: 'bg-yellow-500', icon: Sun },
+  hot: { label: 'Quente', color: 'bg-red-500', icon: Flame },
 };
 
 const funnelStages: LeadStatus[] = ['new', 'contacted', 'qualified', 'scheduled', 'converted'];
@@ -40,13 +49,15 @@ function formatDate(dateStr: string | null): string {
 }
 
 function TagList({ items, emptyText }: { items: string[] | null; emptyText: string }) {
-  if (!items || items.length === 0) return <span className="text-text-muted text-xs italic">{emptyText}</span>;
+  if (!items || items.length === 0) {
+    return <span className="text-muted-foreground text-xs italic">{emptyText}</span>;
+  }
   return (
     <div className="flex flex-wrap gap-1">
       {items.map((item, i) => (
-        <span key={i} className="bg-surface-hover border border-border px-2 py-0.5 rounded text-xs text-text">
+        <Badge key={i} variant="secondary" className="text-xs font-normal">
           {item}
-        </span>
+        </Badge>
       ))}
     </div>
   );
@@ -102,15 +113,18 @@ export function LeadPanel({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-32">
-        <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+      <div className="p-4 space-y-4">
+        <Skeleton className="h-5 w-32" />
+        <Skeleton className="h-3 w-24" />
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-20 w-full" />
       </div>
     );
   }
 
   if (!lead) {
     return (
-      <div className="p-4 text-center text-text-muted text-xs">
+      <div className="p-4 text-center text-muted-foreground text-xs">
         Nenhum lead encontrado para este contato
       </div>
     );
@@ -119,35 +133,36 @@ export function LeadPanel({
   const currentStageIndex = funnelStages.indexOf(lead.status);
 
   return (
-    <div className="flex flex-col gap-4 p-4 overflow-y-auto h-full">
+    <div className="flex flex-col gap-4 p-4">
       {/* Header */}
       <div>
-        <h3 className="text-sm font-semibold text-navy">{lead.name || lead.phone}</h3>
-        <p className="text-xs text-text-muted">{lead.phone}</p>
+        <h3 className="text-sm font-semibold text-foreground">{lead.name || lead.phone}</h3>
+        <p className="text-xs text-muted-foreground">{lead.phone}</p>
       </div>
 
       {/* Temperature */}
       <div>
-        <label className="text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1.5 block">
-          Temperatura {saving && <span className="text-accent">salvando...</span>}
-        </label>
+        <Label className="text-[10px] uppercase tracking-wider mb-1.5 block">
+          Temperatura {saving && <span className="text-pink">salvando...</span>}
+        </Label>
         <div className="flex gap-1.5">
           {(Object.keys(temperatureConfig) as LeadTemperature[]).map((temp) => {
             const cfg = temperatureConfig[temp];
             const isActive = lead.temperature === temp;
             return (
-              <button
+              <Button
                 key={temp}
+                variant="outline"
+                size="sm"
                 onClick={() => updateField('temperature', temp)}
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer border ${
-                  isActive
-                    ? `${cfg.color} text-white border-transparent`
-                    : 'bg-white border-border text-text-muted hover:bg-surface-hover'
-                }`}
+                className={cn(
+                  'gap-1 text-xs',
+                  isActive && `${cfg.color} text-white border-transparent hover:text-white hover:${cfg.color}`
+                )}
               >
-                <span>{cfg.icon}</span>
+                <cfg.icon className="size-3" />
                 {cfg.label}
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -155,35 +170,36 @@ export function LeadPanel({
 
       {/* Funnel Stage */}
       <div>
-        <label className="text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1.5 block">
+        <Label className="text-[10px] uppercase tracking-wider mb-1.5 block">
           Etapa do Funil
-        </label>
+        </Label>
         <div className="flex flex-col gap-1">
           {funnelStages.map((stage, i) => {
             const isActive = lead.status === stage;
             const isPast = i < currentStageIndex;
             return (
-              <button
+              <Button
                 key={stage}
+                variant="outline"
+                size="sm"
                 onClick={() => updateField('status', stage)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer border ${
-                  isActive
-                    ? `${statusColors[stage]} border-transparent font-bold`
-                    : isPast
-                      ? 'bg-surface-hover border-border text-text-muted'
-                      : 'bg-white border-border text-text-muted hover:bg-surface-hover'
-                }`}
+                className={cn(
+                  'justify-start gap-2 text-xs',
+                  isActive && `${statusColors[stage]} border-transparent font-bold`,
+                  isPast && 'bg-muted text-muted-foreground'
+                )}
               >
-                <span className={`w-2 h-2 rounded-full shrink-0 ${
-                  isActive ? 'bg-current' : isPast ? 'bg-text-muted/40' : 'bg-border'
-                }`} />
+                <span className={cn(
+                  'size-2 rounded-full shrink-0',
+                  isActive ? 'bg-current' : isPast ? 'bg-muted-foreground/40' : 'bg-border'
+                )} />
                 {statusLabels[stage]}
-              </button>
+              </Button>
             );
           })}
           {lead.status === 'lost' && (
-            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold ${statusColors.lost}`}>
-              <span className="w-2 h-2 rounded-full bg-current shrink-0" />
+            <div className={cn('flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold', statusColors.lost)}>
+              <span className="size-2 rounded-full bg-current shrink-0" />
               {statusLabels.lost}
             </div>
           )}
@@ -200,25 +216,26 @@ export function LeadPanel({
 
       {/* Decision Maker */}
       <div>
-        <label className="text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1.5 block">
+        <Label className="text-[10px] uppercase tracking-wider mb-1.5 block">
           Tomador de Decisao
-        </label>
+        </Label>
         <div className="flex gap-1.5">
           {[
             { value: true, label: 'Sim' },
             { value: false, label: 'Nao' },
           ].map((opt) => (
-            <button
+            <Button
               key={String(opt.value)}
+              variant="outline"
+              size="sm"
               onClick={() => updateField('isDecisionMaker', opt.value)}
-              className={`px-3 py-1 rounded-lg text-xs font-medium transition cursor-pointer border ${
-                lead.isDecisionMaker === opt.value
-                  ? 'bg-accent text-white border-transparent'
-                  : 'bg-white border-border text-text-muted hover:bg-surface-hover'
-              }`}
+              className={cn(
+                'text-xs',
+                lead.isDecisionMaker === opt.value && 'bg-pink text-white border-transparent hover:bg-pink-hover hover:text-white'
+              )}
             >
               {opt.label}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
@@ -226,26 +243,22 @@ export function LeadPanel({
       {/* Budget & Timeline */}
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className="text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1 block">
-            Orcamento
-          </label>
-          <p className="text-xs text-text">{lead.budget || '-'}</p>
+          <Label className="text-[10px] uppercase tracking-wider mb-1 block">Orcamento</Label>
+          <p className="text-xs text-foreground">{lead.budget || '-'}</p>
         </div>
         <div>
-          <label className="text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1 block">
-            Timeline
-          </label>
-          <p className="text-xs text-text">{lead.timeline || '-'}</p>
+          <Label className="text-[10px] uppercase tracking-wider mb-1 block">Timeline</Label>
+          <p className="text-xs text-foreground">{lead.timeline || '-'}</p>
         </div>
       </div>
 
       {/* Qualification Summary */}
       {lead.qualificationSummary && (
         <div>
-          <label className="text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1 block">
+          <Label className="text-[10px] uppercase tracking-wider mb-1 block">
             Resumo da Qualificacao
-          </label>
-          <p className="text-xs text-text bg-surface-hover rounded-lg p-2 leading-relaxed">
+          </Label>
+          <p className="text-xs text-foreground bg-muted rounded-lg p-2 leading-relaxed">
             {lead.qualificationSummary}
           </p>
         </div>
@@ -253,85 +266,73 @@ export function LeadPanel({
 
       {/* Pain Points */}
       <div>
-        <label className="text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1 block">
-          Dores
-        </label>
+        <Label className="text-[10px] uppercase tracking-wider mb-1 block">Dores</Label>
         <TagList items={lead.painPoints} emptyText="Nenhuma identificada" />
       </div>
 
       {/* Interests */}
       <div>
-        <label className="text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1 block">
-          Interesses
-        </label>
+        <Label className="text-[10px] uppercase tracking-wider mb-1 block">Interesses</Label>
         <TagList items={lead.interests} emptyText="Nenhum identificado" />
       </div>
 
       {/* Expectations */}
       <div>
-        <label className="text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1 block">
-          Expectativas
-        </label>
+        <Label className="text-[10px] uppercase tracking-wider mb-1 block">Expectativas</Label>
         <TagList items={lead.expectations} emptyText="Nenhuma identificada" />
       </div>
 
       {/* Objections */}
       <div>
-        <label className="text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1 block">
-          Objecoes
-        </label>
+        <Label className="text-[10px] uppercase tracking-wider mb-1 block">Objecoes</Label>
         <TagList items={lead.objections} emptyText="Nenhuma identificada" />
       </div>
 
       {/* Notes */}
       <div>
-        <label className="text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1 block">
-          Notas
-        </label>
+        <Label className="text-[10px] uppercase tracking-wider mb-1 block">Notas</Label>
         {editingNotes ? (
           <div className="flex flex-col gap-1.5">
-            <textarea
+            <Textarea
               value={notesValue}
               onChange={(e) => setNotesValue(e.target.value)}
-              className="w-full px-2 py-1.5 text-xs border border-border rounded-lg bg-white resize-none focus:outline-none focus:border-accent"
               rows={3}
+              className="text-xs resize-none"
             />
             <div className="flex gap-1.5">
-              <button
-                onClick={saveNotes}
-                className="px-2.5 py-1 bg-accent text-white text-[10px] rounded-lg font-medium cursor-pointer border-none hover:bg-accent-hover transition"
-              >
+              <Button size="sm" onClick={saveNotes} className="text-[10px] bg-pink hover:bg-pink-hover">
                 Salvar
-              </button>
-              <button
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
                 onClick={() => { setEditingNotes(false); setNotesValue(lead.notes || ''); }}
-                className="px-2.5 py-1 bg-surface-hover text-text-muted text-[10px] rounded-lg font-medium cursor-pointer border border-border hover:bg-border transition"
+                className="text-[10px]"
               >
                 Cancelar
-              </button>
+              </Button>
             </div>
           </div>
         ) : (
           <button
             onClick={() => setEditingNotes(true)}
-            className="w-full text-left text-xs text-text bg-surface-hover rounded-lg p-2 leading-relaxed cursor-pointer border border-transparent hover:border-border transition"
+            className="w-full text-left text-xs text-foreground bg-muted rounded-lg p-2 leading-relaxed cursor-pointer border border-transparent hover:border-border transition"
           >
-            {lead.notes || <span className="text-text-muted italic">Clique para adicionar notas...</span>}
+            {lead.notes || <span className="text-muted-foreground italic">Clique para adicionar notas...</span>}
           </button>
         )}
       </div>
 
       {/* Timestamps */}
-      <div className="border-t border-border pt-3 mt-1">
-        <div className="grid grid-cols-2 gap-2 text-[10px] text-text-muted">
-          <div>
-            <span className="font-semibold uppercase">Ultimo contato</span>
-            <p>{formatDate(lead.lastContactAt)}</p>
-          </div>
-          <div>
-            <span className="font-semibold uppercase">Criado em</span>
-            <p>{formatDate(lead.createdAt)}</p>
-          </div>
+      <Separator />
+      <div className="grid grid-cols-2 gap-2 text-[10px] text-muted-foreground">
+        <div>
+          <span className="font-semibold uppercase">Ultimo contato</span>
+          <p>{formatDate(lead.lastContactAt)}</p>
+        </div>
+        <div>
+          <span className="font-semibold uppercase">Criado em</span>
+          <p>{formatDate(lead.createdAt)}</p>
         </div>
       </div>
     </div>

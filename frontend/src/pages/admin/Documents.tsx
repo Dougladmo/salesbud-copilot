@@ -1,12 +1,15 @@
 import { useEffect, useState, useCallback } from 'react';
+import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { companies } from '../../api/client';
 import type { DocumentRecord } from '../../api/client';
 import { useSeller } from '../../context/SellerContext';
 import { DocumentTable } from '../../components/documents/DocumentTable';
-
-const inputCls = 'bg-white border border-border rounded-lg px-3 py-2 text-sm text-navy outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition';
-const btnPrimary = 'bg-navy-dark text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-navy-light transition cursor-pointer';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 export default function Documents() {
   const { seller: currentSeller } = useSeller();
@@ -68,43 +71,61 @@ export default function Documents() {
   };
 
   return (
-    <div>
-      <h2 className="text-2xl font-semibold text-navy mb-2">Base de Conhecimento (RAG)</h2>
-      <p className="text-text-muted text-sm mb-5">
+    <div className="animate-fade-in">
+      <h2 className="text-2xl font-semibold text-foreground mb-2">Base de Conhecimento (RAG)</h2>
+      <p className="text-muted-foreground text-sm mb-5">
         Gerencie os documentos da base de conhecimento de <strong>{companyName}</strong>.
       </p>
 
-      <form onSubmit={handleSubmit} className="bg-surface border border-border rounded-xl p-5 mb-6">
-        {namespace && (
-          <div className="mb-4 text-xs text-text-muted">
-            Namespace: <code className="bg-white border border-border px-2 py-0.5 rounded text-xs">{namespace}</code>
-          </div>
-        )}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-sm">Novo Documento</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {namespace && (
+              <div className="text-xs text-muted-foreground">
+                Namespace: <Badge variant="outline" className="ml-1 font-mono">{namespace}</Badge>
+              </div>
+            )}
 
-        <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted mt-4">
-          Conteúdo do Documento
-          <textarea
-            className={`${inputCls} resize-y`}
-            rows={8}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Cole aqui o conteúdo do documento (informações de produto, FAQ, políticas, etc.)"
-            required
-          />
-        </label>
+            <div className="space-y-2">
+              <Label htmlFor="docContent">Conteudo do Documento</Label>
+              <Textarea
+                id="docContent"
+                rows={8}
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder="Cole aqui o conteudo do documento (informacoes de produto, FAQ, politicas, etc.)"
+                className="resize-y"
+                required
+              />
+            </div>
 
-        <div className="flex gap-3 mt-4">
-          <button type="submit" className={`${btnPrimary} disabled:opacity-50 disabled:cursor-not-allowed`} disabled={loading || !companyId}>
-            {loading ? 'Enviando...' : 'Adicionar Documento'}
-          </button>
-        </div>
-      </form>
+            <Button type="submit" disabled={loading || !companyId}>
+              {loading ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Enviando...
+                </>
+              ) : (
+                'Adicionar Documento'
+              )}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
       {companyId && (
         <>
-          <h3 className="text-sm font-semibold text-text-muted mb-3 uppercase tracking-wide">
-            Documentos Cadastrados ({documents.length})
-          </h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              Documentos Cadastrados
+            </h3>
+            <Badge variant="secondary">
+              {documents.length} {documents.length === 1 ? 'documento' : 'documentos'}
+            </Badge>
+          </div>
           <DocumentTable
             documents={documents}
             loadingDocs={loadingDocs}

@@ -1,7 +1,20 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { Search, RefreshCw, UserRound, Send, Loader2, MessageSquare } from 'lucide-react';
 import { chat, type EvolutionChat, type ChatMessage } from '../../api/client';
 import { useSeller } from '../../context/SellerContext';
 import { LeadPanel } from '../../components/chat/LeadPanel';
+import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 function extractText(msg: ChatMessage): string {
   const m = msg.message;
@@ -144,7 +157,6 @@ export default function ChatPage() {
     const isNewMessages = messages.length !== prevMsgCountRef.current;
     prevMsgCountRef.current = messages.length;
     if (!isNewMessages) return;
-    // Auto-scroll if near bottom (within 150px) or on first load
     const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 150;
     if (isNearBottom) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -200,32 +212,38 @@ export default function ChatPage() {
   });
 
   return (
-    <div className="flex h-screen bg-surface overflow-hidden">
+    <div className="flex h-screen bg-muted overflow-hidden">
       {/* Sidebar - Contact list */}
-      <div className="w-80 bg-white border-r border-border flex flex-col shrink-0">
+      <div className="w-80 bg-card border-r border-border flex flex-col shrink-0">
         <div className="p-4 border-b border-border">
-          <h2 className="text-base font-semibold text-text mb-3">Conversas</h2>
+          <h2 className="text-base font-semibold text-foreground mb-3">Conversas</h2>
           <div className="relative">
-            <input
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+            <Input
               type="text"
               placeholder="Buscar conversa..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 bg-surface rounded-lg text-sm border border-border focus:outline-none focus:border-accent transition-colors"
+              className="pl-9"
             />
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        <ScrollArea className="flex-1">
           {loadingChats ? (
-            <div className="flex items-center justify-center h-32">
-              <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+            <div className="p-4 space-y-3">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <Skeleton className="size-10 rounded-full" />
+                  <div className="flex-1 space-y-1.5">
+                    <Skeleton className="h-3.5 w-24" />
+                    <Skeleton className="h-3 w-36" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : filteredChats.length === 0 ? (
-            <div className="p-6 text-center text-text-muted text-sm">
+            <div className="p-6 text-center text-muted-foreground text-sm">
               {search ? 'Nenhuma conversa encontrada' : 'Nenhuma conversa'}
             </div>
           ) : (
@@ -243,36 +261,32 @@ export default function ChatPage() {
                 <button
                   key={c.remoteJid}
                   onClick={() => setSelectedJid(c.remoteJid)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors cursor-pointer border-none ${
+                  className={cn(
+                    'w-full flex items-center gap-3 px-4 py-3 text-left transition-colors cursor-pointer border-none',
                     isSelected
-                      ? 'bg-accent/10'
-                      : 'hover:bg-surface-hover bg-transparent'
-                  }`}
-                >
-                  {c.profilePicUrl ? (
-                    <img
-                      src={c.profilePicUrl}
-                      alt={name}
-                      className="w-10 h-10 rounded-full object-cover shrink-0"
-                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                    />
-                  ) : (
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 ${
-                      isSelected ? 'bg-accent' : 'bg-navy-light'
-                    }`}>
-                      {getInitial(name)}
-                    </div>
+                      ? 'bg-pink/10'
+                      : 'hover:bg-muted bg-transparent'
                   )}
+                >
+                  <Avatar className="size-10 shrink-0">
+                    <AvatarImage src={c.profilePicUrl ?? undefined} alt={name} />
+                    <AvatarFallback className={cn(
+                      'text-white text-sm font-bold',
+                      isSelected ? 'bg-pink' : 'bg-navy-light'
+                    )}>
+                      {getInitial(name)}
+                    </AvatarFallback>
+                  </Avatar>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium text-text truncate">{name}</p>
+                      <p className="text-sm font-medium text-foreground truncate">{name}</p>
                       {dateLabel && (
-                        <span className="text-[11px] text-text-muted shrink-0 ml-2">
+                        <span className="text-[11px] text-muted-foreground shrink-0 ml-2">
                           {dateLabel}
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-text-muted truncate mt-0.5">
+                    <p className="text-xs text-muted-foreground truncate mt-0.5">
                       {lastText || formatJid(c.remoteJid)}
                     </p>
                   </div>
@@ -280,65 +294,66 @@ export default function ChatPage() {
               );
             })
           )}
-        </div>
+        </ScrollArea>
       </div>
 
       {/* Main chat area */}
       <div className="flex-1 flex flex-col min-w-0">
         {!selectedJid || !selectedChat ? (
-          <div className="flex-1 flex items-center justify-center bg-surface">
+          <div className="flex-1 flex items-center justify-center bg-muted">
             <div className="text-center">
-              <div className="w-20 h-20 rounded-full bg-border mx-auto mb-4 flex items-center justify-center">
-                <svg className="w-10 h-10 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
+              <div className="size-20 rounded-full bg-border mx-auto mb-4 flex items-center justify-center">
+                <MessageSquare className="size-10 text-muted-foreground" />
               </div>
-              <p className="text-text-muted text-sm">Selecione uma conversa para visualizar</p>
+              <p className="text-muted-foreground text-sm">Selecione uma conversa para visualizar</p>
             </div>
           </div>
         ) : (
           <>
             {/* Chat header */}
-            <div className="h-16 bg-white border-b border-border flex items-center px-5 gap-3 shrink-0">
-              {selectedChat.profilePicUrl ? (
-                <img
-                  src={selectedChat.profilePicUrl}
-                  alt=""
-                  className="w-9 h-9 rounded-full object-cover"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                />
-              ) : (
-                <div className="w-9 h-9 rounded-full bg-accent text-white flex items-center justify-center text-sm font-bold">
+            <div className="h-16 bg-card border-b border-border flex items-center px-5 gap-3 shrink-0">
+              <Avatar className="size-9">
+                <AvatarImage src={selectedChat.profilePicUrl ?? undefined} alt="" />
+                <AvatarFallback className="bg-pink text-white text-sm font-bold">
                   {getInitial(getContactName(selectedChat))}
-                </div>
-              )}
+                </AvatarFallback>
+              </Avatar>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-text truncate">
+                <p className="text-sm font-semibold text-foreground truncate">
                   {getContactName(selectedChat)}
                 </p>
-                <p className="text-[11px] text-text-muted truncate">{formatJid(selectedChat.remoteJid)}</p>
+                <p className="text-[11px] text-muted-foreground truncate">
+                  {formatJid(selectedChat.remoteJid)}
+                </p>
               </div>
               <div className="ml-auto flex items-center gap-1">
-                <button
-                  onClick={() => loadMessages(selectedJid)}
-                  className="p-2 rounded-lg hover:bg-surface transition-colors cursor-pointer bg-transparent border-none"
-                  title="Atualizar mensagens"
-                >
-                  <svg className="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => setShowLeadPanel(!showLeadPanel)}
-                  className={`p-2 rounded-lg transition-colors cursor-pointer border-none ${
-                    showLeadPanel ? 'bg-accent/10 text-accent' : 'hover:bg-surface text-text-muted bg-transparent'
-                  }`}
-                  title={showLeadPanel ? 'Ocultar painel do lead' : 'Exibir painel do lead'}
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => loadMessages(selectedJid)}
+                    >
+                      <RefreshCw className="size-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Atualizar mensagens</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setShowLeadPanel(!showLeadPanel)}
+                      className={cn(showLeadPanel && 'bg-pink/10 text-pink')}
+                    >
+                      <UserRound className="size-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {showLeadPanel ? 'Ocultar painel do lead' : 'Exibir painel do lead'}
+                  </TooltipContent>
+                </Tooltip>
               </div>
             </div>
 
@@ -350,20 +365,20 @@ export default function ChatPage() {
             >
               {loadingMessages ? (
                 <div className="flex items-center justify-center h-32">
-                  <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                  <Loader2 className="size-6 animate-spin text-pink" />
                 </div>
               ) : messages.length === 0 ? (
                 <div className="flex items-center justify-center h-32">
-                  <p className="text-text-muted text-sm">Nenhuma mensagem encontrada</p>
+                  <p className="text-muted-foreground text-sm">Nenhuma mensagem encontrada</p>
                 </div>
               ) : (
                 <>
                   {groupedMessages.map((group) => (
                     <div key={group.date}>
                       <div className="flex justify-center my-3">
-                        <span className="bg-white/90 text-text-muted text-[11px] px-3 py-1 rounded-full shadow-sm">
+                        <Badge variant="secondary" className="shadow-sm text-[11px] font-normal">
                           {group.date}
-                        </span>
+                        </Badge>
                       </div>
                       {group.msgs.map((msg) => {
                         const text = extractText(msg);
@@ -372,20 +387,22 @@ export default function ChatPage() {
                         return (
                           <div
                             key={msg.key.id}
-                            className={`flex mb-1 ${fromMe ? 'justify-end' : 'justify-start'}`}
+                            className={cn('flex mb-1', fromMe ? 'justify-end' : 'justify-start')}
                           >
                             <div
-                              className={`max-w-[70%] px-3 py-2 rounded-xl text-sm leading-relaxed shadow-sm ${
+                              className={cn(
+                                'max-w-[70%] px-3 py-2 rounded-xl text-sm leading-relaxed shadow-sm',
                                 fromMe
-                                  ? 'bg-accent text-white rounded-br-sm'
-                                  : 'bg-white text-text rounded-bl-sm'
-                              }`}
+                                  ? 'bg-pink text-white rounded-br-sm'
+                                  : 'bg-card text-foreground rounded-bl-sm'
+                              )}
                             >
                               <p className="whitespace-pre-wrap break-words">{text}</p>
                               <p
-                                className={`text-[10px] mt-1 text-right ${
-                                  fromMe ? 'text-white/60' : 'text-text-muted'
-                                }`}
+                                className={cn(
+                                  'text-[10px] mt-1 text-right',
+                                  fromMe ? 'text-white/60' : 'text-muted-foreground'
+                                )}
                               >
                                 {formatTime(msg.messageTimestamp)}
                               </p>
@@ -401,7 +418,7 @@ export default function ChatPage() {
             </div>
 
             {/* Input area */}
-            <div className="bg-white border-t border-border px-4 py-3 shrink-0">
+            <div className="bg-card border-t border-border px-4 py-3 shrink-0">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -409,28 +426,27 @@ export default function ChatPage() {
                 }}
                 className="flex items-center gap-3"
               >
-                <input
+                <Input
                   ref={inputRef}
                   type="text"
                   placeholder="Digite uma mensagem..."
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   disabled={sending}
-                  className="flex-1 px-4 py-2.5 bg-surface rounded-full text-sm border border-border focus:outline-none focus:border-accent transition-colors disabled:opacity-50"
+                  className="flex-1 rounded-full"
                 />
-                <button
+                <Button
                   type="submit"
+                  size="icon"
                   disabled={!inputText.trim() || sending}
-                  className="w-10 h-10 rounded-full bg-accent text-white flex items-center justify-center shrink-0 hover:bg-accent-hover transition-colors disabled:opacity-40 cursor-pointer border-none"
+                  className="rounded-full bg-pink hover:bg-pink-hover shrink-0"
                 >
                   {sending ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <Loader2 className="size-4 animate-spin" />
                   ) : (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                    </svg>
+                    <Send className="size-4" />
                   )}
-                </button>
+                </Button>
               </form>
             </div>
           </>
@@ -439,13 +455,13 @@ export default function ChatPage() {
 
       {/* Lead CRM Panel */}
       {selectedJid && seller && showLeadPanel && (
-        <div className="w-80 bg-white border-l border-border flex flex-col shrink-0 overflow-hidden">
+        <div className="w-80 bg-card border-l border-border flex flex-col shrink-0 overflow-hidden">
           <div className="px-4 py-3 border-b border-border">
-            <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider">Lead CRM</h3>
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Lead CRM</h3>
           </div>
-          <div className="flex-1 overflow-y-auto">
+          <ScrollArea className="flex-1">
             <LeadPanel sellerId={seller.id} remoteJid={selectedJid} />
-          </div>
+          </ScrollArea>
         </div>
       )}
     </div>

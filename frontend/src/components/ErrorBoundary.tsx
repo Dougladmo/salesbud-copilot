@@ -24,19 +24,23 @@ export default class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-surface p-8">
-          <div className="bg-white border border-border rounded-2xl p-8 max-w-md w-full text-center shadow-sm">
-            <span className="text-4xl block mb-4">⚠️</span>
-            <h2 className="text-lg font-bold text-navy mb-2">Algo deu errado</h2>
-            <p className="text-sm text-text-muted mb-4">
-              {this.state.error?.message || 'Erro inesperado na aplicação.'}
+        <div className="min-h-screen flex items-center justify-center bg-background p-8">
+          <div className="bg-card border rounded-xl p-8 max-w-md w-full text-center shadow-sm">
+            <div className="size-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
+              <svg className="size-6 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h2 className="text-lg font-semibold text-foreground mb-2">Algo deu errado</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              {this.state.error?.message || 'Erro inesperado na aplicacao.'}
             </p>
             <button
               onClick={() => {
                 this.setState({ hasError: false, error: null });
                 window.location.reload();
               }}
-              className="bg-navy-dark text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-accent transition-all duration-200 cursor-pointer"
+              className="bg-primary text-primary-foreground px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-primary/90 transition-all duration-200 cursor-pointer"
             >
               Recarregar
             </button>

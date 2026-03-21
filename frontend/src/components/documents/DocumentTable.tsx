@@ -1,4 +1,17 @@
+import { Loader2 } from 'lucide-react';
 import type { DocumentRecord } from '../../api/client';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function DocumentTable({
   documents,
@@ -12,49 +25,66 @@ export function DocumentTable({
   onDelete: (docId: string) => void;
 }) {
   if (loadingDocs) {
-    return <p className="text-text-muted text-sm">Carregando documentos...</p>;
+    return (
+      <Card>
+        <CardContent className="p-4 space-y-3">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-10 w-full" />
+          ))}
+        </CardContent>
+      </Card>
+    );
   }
 
   if (documents.length === 0) {
     return (
-      <div className="bg-surface border border-border rounded-xl p-8 text-center text-text-muted text-sm">
-        Nenhum documento encontrado nesta base de conhecimento.
-      </div>
+      <Card className="border-dashed">
+        <CardContent className="p-8 text-center text-muted-foreground text-sm">
+          Nenhum documento encontrado nesta base de conhecimento.
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="bg-surface border border-border rounded-xl overflow-hidden">
-      <table className="w-full">
-        <thead className="bg-surface-hover">
-          <tr>
-            <th className="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">ID</th>
-            <th className="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Conteúdo</th>
-            <th className="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider w-20">Ações</th>
-          </tr>
-        </thead>
-        <tbody>
+    <Card>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-32">ID</TableHead>
+            <TableHead>Conteudo</TableHead>
+            <TableHead className="w-24">Acoes</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {documents.map((doc) => (
-            <tr key={doc.id} className="border-t border-border hover:bg-surface-hover transition">
-              <td className="px-4 py-3 text-sm">
-                <code className="bg-white border border-border px-2 py-0.5 rounded text-xs text-text-muted">{doc.id.slice(0, 8)}...</code>
-              </td>
-              <td className="px-4 py-3 text-sm text-text-muted max-w-[500px] truncate" title={doc.text}>
+            <TableRow key={doc.id}>
+              <TableCell>
+                <Badge variant="outline" className="font-mono text-xs">
+                  {doc.id.slice(0, 8)}...
+                </Badge>
+              </TableCell>
+              <TableCell className="max-w-[500px] truncate text-muted-foreground" title={doc.text}>
                 {doc.text.length > 120 ? doc.text.slice(0, 120) + '...' : doc.text}
-              </td>
-              <td className="px-4 py-3">
-                <button
-                  className="bg-danger text-white px-3 py-1 rounded-full text-xs font-medium hover:bg-danger-hover transition cursor-pointer disabled:opacity-50"
+              </TableCell>
+              <TableCell>
+                <Button
+                  variant="destructive"
+                  size="sm"
                   disabled={deletingId === doc.id}
                   onClick={() => onDelete(doc.id)}
                 >
-                  {deletingId === doc.id ? '...' : 'Remover'}
-                </button>
-              </td>
-            </tr>
+                  {deletingId === doc.id ? (
+                    <Loader2 className="size-3 animate-spin" />
+                  ) : (
+                    'Remover'
+                  )}
+                </Button>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
-    </div>
+        </TableBody>
+      </Table>
+    </Card>
   );
 }

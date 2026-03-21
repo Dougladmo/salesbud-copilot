@@ -1,24 +1,19 @@
 import { useState, useEffect } from 'react';
+import { Settings, FileText } from 'lucide-react';
 import { sellers } from '../../api/client';
 import { useSeller } from '../../context/SellerContext';
 import { useCopilotConfig } from '../../hooks/useCopilotConfig';
 import { useCopilotDocuments } from '../../hooks/useCopilotDocuments';
 import { CopilotHeader } from '../../components/copilot/CopilotHeader';
-import { TabSwitcher, type Tab } from '../../components/copilot/TabSwitcher';
 import { ConfigTab } from '../../components/copilot/ConfigTab';
 import { DocumentsTab } from '../../components/copilot/DocumentsTab';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-let tabKeyCounter = 0;
-
-const tabs: { key: Tab; label: string; icon: string }[] = [
-  { key: 'config', label: 'Configurações', icon: '⚙️' },
-  { key: 'documents', label: 'Documentos', icon: '📄' },
-];
+type Tab = 'config' | 'documents';
 
 export default function Copilot() {
   const { seller, silentReload } = useSeller();
   const [tab, setTab] = useState<Tab>('config');
-  const [animKey, setAnimKey] = useState(0);
   const [toggling, setToggling] = useState(false);
   const [optimisticActive, setOptimisticActive] = useState<boolean | null>(null);
 
@@ -48,19 +43,23 @@ export default function Copilot() {
     }
   };
 
-  const handleTabChange = (newTab: Tab) => {
-    if (newTab === tab) return;
-    setAnimKey(++tabKeyCounter);
-    setTab(newTab);
-  };
-
   return (
     <div className="animate-fade-in">
       <CopilotHeader isActive={isActive} toggling={toggling} onToggle={toggleActive} />
-      <TabSwitcher tabs={tabs} activeTab={tab} onTabChange={handleTabChange} />
 
-      {tab === 'config' && (
-        <div key={`config-${animKey}`} className="animate-tab-enter">
+      <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
+        <TabsList className="w-full mb-8">
+          <TabsTrigger value="config" className="flex-1 gap-2">
+            <Settings className="size-4" />
+            Configurações
+          </TabsTrigger>
+          <TabsTrigger value="documents" className="flex-1 gap-2">
+            <FileText className="size-4" />
+            Documentos
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="config" className="animate-fade-in-up">
           <ConfigTab
             agentName={config.agentName}
             setAgentName={config.setAgentName}
@@ -69,11 +68,9 @@ export default function Copilot() {
             saving={config.saving}
             onSave={config.handleSaveConfig}
           />
-        </div>
-      )}
+        </TabsContent>
 
-      {tab === 'documents' && (
-        <div key={`docs-${animKey}`} className="animate-tab-enter">
+        <TabsContent value="documents" className="animate-fade-in-up">
           <DocumentsTab
             documents={docs.documents}
             companyDocuments={docs.companyDocuments}
@@ -85,8 +82,8 @@ export default function Copilot() {
             onSubmitDoc={docs.handleSubmitDoc}
             onDeleteDoc={docs.handleDeleteDoc}
           />
-        </div>
-      )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

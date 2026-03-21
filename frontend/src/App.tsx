@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Toaster } from 'sonner';
+import { Toaster } from '@/components/ui/sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { SellerProvider } from './context/SellerContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -15,29 +16,31 @@ export default function App() {
   return (
     <ErrorBoundary>
     <BrowserRouter>
-      <Toaster position="top-right" richColors closeButton />
-      <SellerProvider>
-        <Routes>
-          {/* Auth routes (public) */}
-          <Route path="/sign-in/*" element={<SignInPage />} />
+      <TooltipProvider delayDuration={300}>
+        <Toaster position="top-right" richColors closeButton />
+        <SellerProvider>
+          <Routes>
+            {/* Auth routes (public) */}
+            <Route path="/sign-in/*" element={<SignInPage />} />
 
-          {/* Home — redirects based on org role */}
-          <Route path="/" element={<ProtectedRoute><HomeRedirect /></ProtectedRoute>} />
+            {/* Home — redirects based on org role */}
+            <Route path="/" element={<ProtectedRoute><HomeRedirect /></ProtectedRoute>} />
 
-          {/* Seller area */}
-          <Route path="/seller" element={<ProtectedRoute><SellerLayout /></ProtectedRoute>}>
-            <Route index element={<Navigate to="/seller/copilot" replace />} />
-            <Route path="copilot" element={<Copilot />} />
-            <Route path="chat" element={<Chat />} />
-          </Route>
+            {/* Seller area */}
+            <Route path="/seller" element={<ProtectedRoute><SellerLayout /></ProtectedRoute>}>
+              <Route index element={<Navigate to="/seller/copilot" replace />} />
+              <Route path="copilot" element={<Copilot />} />
+              <Route path="chat" element={<Chat />} />
+            </Route>
 
-          {/* Admin area */}
-          <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
-            <Route index element={<Navigate to="/admin/documents" replace />} />
-            <Route path="documents" element={<Documents />} />
-          </Route>
-        </Routes>
-      </SellerProvider>
+            {/* Admin area */}
+            <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
+              <Route index element={<Navigate to="/admin/documents" replace />} />
+              <Route path="documents" element={<Documents />} />
+            </Route>
+          </Routes>
+        </SellerProvider>
+      </TooltipProvider>
     </BrowserRouter>
     </ErrorBoundary>
   );
