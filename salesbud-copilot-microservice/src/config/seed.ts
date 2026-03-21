@@ -44,6 +44,25 @@ export async function seedDatabase(): Promise<void> {
     logger.info(`Seeded seller: ${seller.name} (${seller.id})`);
   }
 
+  // Seed admin user (for managing company knowledge base)
+  if (env.SEED_ADMIN_CLERK_USER_ID) {
+    const existingAdmin = await sellerRepo.findOne({
+      where: { clerkUserId: env.SEED_ADMIN_CLERK_USER_ID },
+    });
+
+    if (!existingAdmin) {
+      const admin = sellerRepo.create({
+        name: 'Douglas Moura (Admin)',
+        agentName: 'Admin',
+        companyId: company.id,
+        clerkUserId: env.SEED_ADMIN_CLERK_USER_ID,
+        isActive: false,
+      });
+      await sellerRepo.save(admin);
+      logger.info(`Seeded admin seller: ${admin.name} (${admin.id})`);
+    }
+  }
+
   // Auto-configure Evolution webhook to point to current WEBHOOK_BASE_URL
   await configureWebhook(seller);
 }
