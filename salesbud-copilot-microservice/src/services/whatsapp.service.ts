@@ -50,4 +50,32 @@ export class WhatsappService {
       `Media (${mediaType})`,
     );
   }
+
+  async findChats(): Promise<unknown[]> {
+    const url = `${this.baseUrl}/chat/findChats/${this.instance}`;
+    const { data } = await axios.post(url, {}, { headers: this.headers });
+    return data;
+  }
+
+  async findMessages(remoteJid: string, page = 1, limit = 50): Promise<{ records: unknown[]; total: number; pages: number }> {
+    const url = `${this.baseUrl}/chat/findMessages/${this.instance}`;
+    const { data } = await axios.post(
+      url,
+      { where: { key: { remoteJid } }, page, limit },
+      { headers: this.headers },
+    );
+    const msgs = data?.messages ?? data;
+    return {
+      records: msgs?.records ?? [],
+      total: msgs?.total ?? 0,
+      pages: msgs?.pages ?? 1,
+    };
+  }
+
+  async findContacts(id?: string): Promise<unknown[]> {
+    const url = `${this.baseUrl}/chat/findContacts/${this.instance}`;
+    const body = id ? { where: { id } } : {};
+    const { data } = await axios.post(url, body, { headers: this.headers });
+    return data;
+  }
 }

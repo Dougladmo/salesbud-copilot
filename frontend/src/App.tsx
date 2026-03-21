@@ -7,6 +7,7 @@ import HomeRedirect from './components/HomeRedirect';
 import SellerLayout from './components/SellerLayout';
 import AdminLayout from './components/AdminLayout';
 import Copilot from './pages/seller/Copilot';
+import Chat from './pages/seller/Chat';
 import Sellers from './pages/admin/Sellers';
 import Documents from './pages/admin/Documents';
 import SignInPage from './pages/auth/SignInPage';
@@ -30,6 +31,7 @@ export default function App() {
           <Route path="/seller" element={<ProtectedRoute><SellerLayout /></ProtectedRoute>}>
             <Route index element={<Navigate to="/seller/copilot" replace />} />
             <Route path="copilot" element={<Copilot />} />
+            <Route path="chat" element={<Chat />} />
           </Route>
 
           {/* Admin area */}

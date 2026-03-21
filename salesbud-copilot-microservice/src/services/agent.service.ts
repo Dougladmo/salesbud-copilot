@@ -7,10 +7,12 @@ import { redis } from '../config/redis.js';
 import { logger } from '../config/logger.js';
 import { SellerService } from './seller.service.js';
 import { RagService } from './rag.service.js';
+import { LeadService } from './lead.service.js';
 import { buildSystemPrompt } from '../utils/prompt-builder.js';
 import { sanitizeUserInput, sanitizeOutput } from '../utils/prompt-guard.js';
 import { createRagSearchTool } from '../tools/rag-search.tool.js';
 import { createThinkTool } from '../tools/think.tool.js';
+import { createClassifyLeadTool } from '../tools/classify-lead.tool.js';
 
 @injectable()
 export class AgentService {
@@ -19,6 +21,7 @@ export class AgentService {
   constructor(
     @inject(SellerService) private readonly sellerService: SellerService,
     @inject(RagService) private readonly ragService: RagService,
+    @inject(LeadService) private readonly leadService: LeadService,
   ) {
     this.model = new ChatOpenAI({
       model: 'deepseek/deepseek-v3.2',
@@ -57,6 +60,7 @@ export class AgentService {
         seller.pineconeNamespace,
       ),
       createThinkTool(),
+      createClassifyLeadTool(this.leadService, sellerId, remoteJid),
     ];
 
     const agent = createAgent({ model: this.model, tools, systemPrompt });

@@ -10,6 +10,12 @@ export enum LeadStatus {
   LOST = 'lost',
 }
 
+export enum LeadTemperature {
+  COLD = 'cold',
+  WARM = 'warm',
+  HOT = 'hot',
+}
+
 @Entity('leads')
 @Unique(['sellerId', 'remoteJid'])
 export class Lead {
@@ -37,6 +43,33 @@ export class Lead {
 
   @Column({ type: 'text', nullable: true })
   notes: string | null;
+
+  @Column({ type: 'enum', enum: LeadTemperature, nullable: true })
+  temperature: LeadTemperature | null;
+
+  @Column({ type: 'simple-array', nullable: true, name: 'pain_points' })
+  painPoints: string[] | null;
+
+  @Column({ type: 'simple-array', nullable: true })
+  expectations: string[] | null;
+
+  @Column({ type: 'simple-array', nullable: true })
+  interests: string[] | null;
+
+  @Column({ type: 'simple-array', nullable: true })
+  objections: string[] | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  budget: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  timeline: string | null;
+
+  @Column({ type: 'boolean', nullable: true, name: 'is_decision_maker' })
+  isDecisionMaker: boolean | null;
+
+  @Column({ type: 'text', nullable: true, name: 'qualification_summary' })
+  qualificationSummary: string | null;
 
   @Column({ name: 'last_contact_at', type: 'timestamp', nullable: true })
   lastContactAt: Date | null;

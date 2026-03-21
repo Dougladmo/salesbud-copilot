@@ -61,6 +61,62 @@ export const auth = {
   me: () => request<Seller>('/me'),
 };
 
+export interface ChatMessage {
+  key: {
+    remoteJid: string;
+    fromMe: boolean;
+    id: string;
+  };
+  message?: {
+    conversation?: string;
+    extendedTextMessage?: { text: string };
+    imageMessage?: { caption?: string };
+    audioMessage?: Record<string, unknown>;
+    videoMessage?: Record<string, unknown>;
+    documentMessage?: { fileName?: string };
+    interactiveMessage?: { body?: { text?: string } };
+  };
+  messageTimestamp: number;
+  pushName?: string;
+  messageType?: string;
+}
+
+export interface ChatLastMessage {
+  key: { fromMe: boolean; remoteJid: string };
+  messageType: string;
+  message?: ChatMessage['message'];
+  messageTimestamp?: number;
+}
+
+export interface EvolutionChat {
+  id: string;
+  remoteJid: string;
+  pushName?: string | null;
+  profilePicUrl?: string | null;
+  updatedAt?: string;
+  lastMessage?: ChatLastMessage | null;
+  unreadCount?: number;
+}
+
+export interface MessagesResponse {
+  records: ChatMessage[];
+  total: number;
+  pages: number;
+}
+
+export const chat = {
+  findChats: () => request<EvolutionChat[]>('/chat/chats'),
+  findMessages: (remoteJid: string, page = 1, limit = 50) =>
+    request<MessagesResponse>(
+      `/chat/messages/${encodeURIComponent(remoteJid)}?page=${page}&limit=${limit}`,
+    ),
+  sendMessage: (remoteJid: string, text: string) =>
+    request<{ status: string }>(`/chat/messages/${encodeURIComponent(remoteJid)}`, {
+      method: 'POST',
+      body: JSON.stringify({ text }),
+    }),
+};
+
 export const sellers = {
   list: () => request<Seller[]>('/sellers'),
   get: (id: string) => request<Seller>(`/sellers/${id}`),

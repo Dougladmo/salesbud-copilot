@@ -55,6 +55,10 @@ export class LeadService {
     return this.repo.save(lead);
   }
 
+  async findBySellerAndJid(sellerId: string, remoteJid: string): Promise<Lead | null> {
+    return this.repo.findOne({ where: { sellerId, remoteJid } });
+  }
+
   async update(id: string, data: UpdateLeadInput): Promise<Lead> {
     const lead = await this.findOne(id);
     Object.assign(lead, data);

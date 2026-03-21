@@ -50,6 +50,19 @@ export default function SellerLayout() {
             <span>🤖</span>
             Copilot
           </NavLink>
+          <NavLink
+            to="/seller/chat"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-150 ${
+                isActive
+                  ? 'bg-accent text-white'
+                  : 'text-white/60 hover:text-white hover:bg-white/10'
+              }`
+            }
+          >
+            <span>💬</span>
+            Conversas
+          </NavLink>
         </nav>
 
         <div className="mt-auto space-y-2 pt-4 border-t border-white/10">
