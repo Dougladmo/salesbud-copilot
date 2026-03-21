@@ -1,11 +1,12 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { UserButton, useOrganization } from '@clerk/clerk-react';
+import { UserButton, useOrganization, useUser } from '@clerk/clerk-react';
 import { useSeller } from '../context/SellerContext';
 
 export default function SellerLayout() {
   const { seller, loading } = useSeller();
   const navigate = useNavigate();
   const { membership } = useOrganization();
+  const { user } = useUser();
   const isAdmin = membership?.role === 'org:admin';
 
   if (loading || !seller) {
@@ -63,7 +64,7 @@ export default function SellerLayout() {
           )}
           <div className="flex items-center gap-3 px-4 pt-2">
             <UserButton afterSignOutUrl="/sign-in" />
-            <span className="text-xs text-white/40">Conta</span>
+            <span className="text-xs text-white/40 truncate">{user?.firstName ?? 'Conta'}</span>
           </div>
         </div>
       </aside>

@@ -1,5 +1,5 @@
 import { NavLink, Navigate, Outlet, useNavigate } from 'react-router-dom';
-import { UserButton, useOrganization } from '@clerk/clerk-react';
+import { UserButton, useOrganization, useUser } from '@clerk/clerk-react';
 import { useSeller } from '../context/SellerContext';
 
 const navItems = [
@@ -11,6 +11,7 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const { seller } = useSeller();
   const { membership, isLoaded } = useOrganization();
+  const { user } = useUser();
 
   if (!isLoaded) {
     return (
@@ -64,7 +65,7 @@ export default function AdminLayout() {
           </button>
           <div className="flex items-center gap-3 px-4">
             <UserButton afterSignOutUrl="/sign-in" />
-            <span className="text-xs text-white/40">Conta</span>
+            <span className="text-xs text-white/40 truncate">{user?.firstName ?? 'Conta'}</span>
           </div>
         </div>
       </aside>
