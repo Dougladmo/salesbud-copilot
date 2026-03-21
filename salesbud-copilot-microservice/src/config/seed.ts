@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { AppDataSource } from './database.js';
 import { env } from './env.js';
 import { logger } from './logger.js';
@@ -24,26 +25,54 @@ export async function seedDatabase(): Promise<void> {
   }
 
   // Fixed seller (matches Clerk org member with admin role)
-  const existingSeller = await sellerRepo.findOne({
+  let seller = await sellerRepo.findOne({
     where: { clerkUserId: env.SEED_SELLER_CLERK_USER_ID },
   });
 
-  if (existingSeller) {
-    logger.info(`Seed already applied — seller "${existingSeller.name}" (${existingSeller.id})`);
-    return;
+  if (seller) {
+    logger.info(`Seed already applied — seller "${seller.name}" (${seller.id})`);
+  } else {
+    seller = sellerRepo.create({
+      name: 'Douglas Moura',
+      agentName: 'Douglas',
+      companyId: company.id,
+      clerkUserId: env.SEED_SELLER_CLERK_USER_ID,
+      evolutionInstanceName: env.EVOLUTION_INSTANCE_NAME,
+      pineconeNamespace: 'seller-douglas-moura-mmy62yda',
+    });
+    seller = await sellerRepo.save(seller);
+    logger.info(`Seeded seller: ${seller.name} (${seller.id})`);
   }
 
-  const seller = sellerRepo.create({
-    name: 'Douglas Moura',
-    agentName: 'Douglas',
-    companyId: company.id,
-    clerkUserId: env.SEED_SELLER_CLERK_USER_ID,
-    evolutionInstanceName: env.EVOLUTION_INSTANCE_NAME,
-    pineconeNamespace: 'seller-douglas-moura-mmy62yda',
-  });
-  const saved = await sellerRepo.save(seller);
+  // Auto-configure Evolution webhook to point to current WEBHOOK_BASE_URL
+  await configureWebhook(seller);
+}
 
-  logger.info(`Seeded seller: ${saved.name} (${saved.id})`);
-  logger.info(`Evolution instance: ${saved.evolutionInstanceName}`);
-  logger.info(`Pinecone namespace: ${saved.pineconeNamespace}`);
+async function configureWebhook(seller: Seller): Promise<void> {
+  const instanceName = seller.evolutionInstanceName;
+  if (!instanceName) return;
+
+  const webhookUrl = `${env.WEBHOOK_BASE_URL}/webhook/${seller.id}`;
+
+  try {
+    await axios.post(
+      `${env.EVOLUTION_API_URL}/webhook/set/${instanceName}`,
+      {
+        enabled: true,
+        url: webhookUrl,
+        webhookByEvents: true,
+        webhookBase64: false,
+        events: ['MESSAGES_UPSERT', 'CONNECTION_UPDATE'],
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: env.EVOLUTION_API_KEY,
+        },
+      },
+    );
+    logger.info(`Webhook configured: ${webhookUrl}`);
+  } catch (error) {
+    logger.error(`Failed to configure webhook: ${error}`);
+  }
 }
