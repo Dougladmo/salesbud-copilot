@@ -7,9 +7,14 @@ import { useCopilotDocuments } from '../../hooks/useCopilotDocuments';
 import { CopilotHeader } from '../../components/copilot/CopilotHeader';
 import { ConfigTab } from '../../components/copilot/ConfigTab';
 import { DocumentsTab } from '../../components/copilot/DocumentsTab';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
 
 type Tab = 'config' | 'documents';
+
+const tabs: { key: Tab; label: string; icon: typeof Settings }[] = [
+  { key: 'config', label: 'Configuracoes', icon: Settings },
+  { key: 'documents', label: 'Documentos', icon: FileText },
+];
 
 export default function Copilot() {
   const { seller, silentReload } = useSeller();
@@ -43,23 +48,41 @@ export default function Copilot() {
     }
   };
 
+  const activeIndex = tabs.findIndex((t) => t.key === tab);
+
   return (
     <div className="animate-fade-in">
       <CopilotHeader isActive={isActive} toggling={toggling} onToggle={toggleActive} />
 
-      <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
-        <TabsList className="w-full mb-8">
-          <TabsTrigger value="config" className="flex-1 gap-2">
-            <Settings className="size-4" />
-            Configurações
-          </TabsTrigger>
-          <TabsTrigger value="documents" className="flex-1 gap-2">
-            <FileText className="size-4" />
-            Documentos
-          </TabsTrigger>
-        </TabsList>
+      {/* Tab Switcher with sliding animation */}
+      <div className="relative flex bg-muted rounded-xl p-1 mb-8">
+        <span
+          className="absolute top-1 bottom-1 rounded-lg bg-background shadow-sm transition-all duration-300 ease-out"
+          style={{
+            width: `calc(${100 / tabs.length}% - 4px)`,
+            left: `calc(${activeIndex * (100 / tabs.length)}% + 2px)`,
+          }}
+        />
+        {tabs.map(({ key, label, icon: Icon }) => (
+          <button
+            key={key}
+            onClick={() => setTab(key)}
+            className={cn(
+              'relative z-10 flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 cursor-pointer',
+              tab === key
+                ? 'text-foreground'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            <Icon className="size-4" />
+            {label}
+          </button>
+        ))}
+      </div>
 
-        <TabsContent value="config" className="animate-fade-in-up">
+      {/* Tab Content */}
+      {tab === 'config' && (
+        <div className="animate-tab-enter">
           <ConfigTab
             agentName={config.agentName}
             setAgentName={config.setAgentName}
@@ -68,9 +91,11 @@ export default function Copilot() {
             saving={config.saving}
             onSave={config.handleSaveConfig}
           />
-        </TabsContent>
+        </div>
+      )}
 
-        <TabsContent value="documents" className="animate-fade-in-up">
+      {tab === 'documents' && (
+        <div className="animate-tab-enter">
           <DocumentsTab
             documents={docs.documents}
             companyDocuments={docs.companyDocuments}
@@ -82,8 +107,8 @@ export default function Copilot() {
             onSubmitDoc={docs.handleSubmitDoc}
             onDeleteDoc={docs.handleDeleteDoc}
           />
-        </TabsContent>
-      </Tabs>
+        </div>
+      )}
     </div>
   );
 }

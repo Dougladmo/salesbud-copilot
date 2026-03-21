@@ -32,7 +32,7 @@ export default function SellerLayout() {
         isAdmin={isAdmin}
       />
       <SidebarInset>
-        <main className={isChatPage ? 'h-screen' : 'p-8 max-w-4xl'}>
+        <main className={isChatPage ? 'h-screen' : 'p-8 w-full max-w-5xl mx-auto'}>
           <Outlet />
         </main>
       </SidebarInset>
