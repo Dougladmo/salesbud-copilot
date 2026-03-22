@@ -9,7 +9,7 @@ export function createCheckAvailabilityTool(
   clerkUserId: string,
   timezone: string,
 ) {
-  const today = new Date().toLocaleDateString('en-CA', { timeZone: timezone });
+  const today = new Date().toLocaleDateString('pt-BR', { timeZone: timezone });
 
   return new DynamicStructuredTool({
     name: 'check_availability',
@@ -77,7 +77,7 @@ export function createCheckAvailabilityTool(
 }
 
 function validateDate(date: string, timezone: string): string | null {
-  const today = new Date().toLocaleDateString('en-CA', { timeZone: timezone });
+  const today = new Date().toLocaleDateString('pt-BR', { timeZone: timezone });
   if (date < today) {
     return `Data inválida: ${date} é no passado. Hoje é ${today}. Use uma data futura com o ano correto (${new Date().getFullYear()}).`;
   }
@@ -91,7 +91,7 @@ function toISODateTime(
 ): string {
   const dateTimeStr = `${date}T${time}:00`;
 
-  const formatter = new Intl.DateTimeFormat('en-CA', {
+  const formatter = new Intl.DateTimeFormat('pt-BR', {
     timeZone: timezone,
     year: 'numeric',
     month: '2-digit',

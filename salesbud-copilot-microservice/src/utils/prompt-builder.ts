@@ -39,7 +39,7 @@ export function buildSystemPrompt(seller: Seller, company: Company): string {
 
   const now = new Date();
   const todayFormatted = now.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/Sao_Paulo' });
-  const todayISO = now.toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+  const todayISO = now.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
 
   let prompt = `# DATA ATUAL
 Hoje é ${todayFormatted} (${todayISO}). Use SEMPRE o ano ${now.getFullYear()} ao trabalhar com datas.

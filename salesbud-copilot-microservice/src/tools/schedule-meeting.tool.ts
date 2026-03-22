@@ -18,7 +18,7 @@ export function createScheduleMeetingTool(
   contactJid: string,
   timezone: string,
 ) {
-  const today = new Date().toLocaleDateString('en-CA', { timeZone: timezone });
+  const today = new Date().toLocaleDateString('pt-BR', { timeZone: timezone });
   const currentYear = new Date().getFullYear();
 
   return new DynamicStructuredTool({
@@ -139,7 +139,7 @@ function toISODateTime(
 ): string {
   const dateTimeStr = `${date}T${time}:00`;
 
-  const formatter = new Intl.DateTimeFormat('en-CA', {
+  const formatter = new Intl.DateTimeFormat('pt-BR', {
     timeZone: timezone,
     year: 'numeric',
     month: '2-digit',
