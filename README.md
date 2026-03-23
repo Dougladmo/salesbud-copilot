@@ -1,6 +1,20 @@
 # SalesBud Copilot
 
-Agente SDR (Sales Development Representative) com IA que automatiza conversas no WhatsApp para equipes de vendas. Composto por um backend em Express 5 + TypeScript e um frontend React 19 + Vite.
+Um copiloto inteligente para vendedores que automatiza o atendimento via WhatsApp. Facilita o processo de venda ao lidar com grande volume de clientes simultaneamente, qualificar leads, conduzir a conversa de forma natural e agendar calls — liberando o vendedor para focar no fechamento.
+
+**O que o Copilot faz:**
+- Conversa naturalmente com leads/clientes
+- Identifica temperatura do lead (frio, morno, quente)
+- Detecta se é tomador de decisão
+- Mapeia dores, expectativas e objeções
+- Avalia interesse e qualificação
+- Classifica etapa do funil de vendas
+- Agenda calls no Google Meet (via Google Calendar)
+- Atende alto volume de leads simultaneamente
+- Personalidade configurável por vendedor
+- Base de conhecimento própria (RAG/Pinecone)
+
+> Backend em Express 5 + TypeScript. Frontend em React 19 + Vite. IA com DeepSeek v3.2 via OpenRouter e LangChain.
 
 ## Pré-requisitos
 
@@ -188,24 +202,27 @@ Acesse a aplicação em: **http://localhost:5173**
 
 ---
 
-## 6. Rodando os Testes
+## Seed Automático (PoC)
 
-```bash
-cd salesbud-copilot-microservice
+Ao rodar o backend pela primeira vez, o sistema cria automaticamente no banco de dados:
 
-# Executar testes uma vez
-npm test
+- 1 empresa padrão
+- 1 usuário vendedor
+- 1 usuário admin
 
-# Modo watch (re-executa ao salvar)
-npm run test:watch
+Isso é apenas para fins de demonstração (PoC), permitindo testar o sistema sem precisar cadastrar nada manualmente.
 
-# Com relatório de cobertura
-npm run test:cov
-```
+### Testando o agente no WhatsApp
+
+Com tudo configurado e rodando (infra Docker + backend + Evolution API conectada), o agente já está pronto para responder. Basta enviar uma mensagem para o número de demonstração:
+
+**[Enviar mensagem no WhatsApp → +55 (91) 98194-1219](https://wa.me/5591981941219)**
+
+O agente responderá automaticamente simulando o vendedor padrão do seed.
 
 ---
 
-## 7. Lint e Build
+## 6. Lint e Build
 
 ### Backend
 
@@ -225,14 +242,58 @@ npm run build     # Build de produção (tsc + vite build)
 
 ---
 
-## Fluxo de Funcionamento
+## Como o Sistema Funciona
+
+### Pipeline de Mensagens
 
 ```
-WhatsApp → Evolution API → Webhook (/webhook)
-    → MessageBufferService (Redis, acumula mensagens)
-    → RabbitMQ (job publicado após timeout)
-    → AgentService (LangGraph + GPT-4o + RAG/Pinecone)
-    → Resposta enviada via WhatsApp
+1. WhatsApp
+   └─► Evolution API (1 instância por vendedor)
+        └─► POST /webhook/:sellerId
+
+2. MessageBufferService
+   └─► Acumula mensagens no Redis por chave (sellerId + remoteJid)
+   └─► Reinicia timer a cada nova mensagem (padrão: 5s)
+        └─► Ao disparar → publica job na fila RabbitMQ
+
+3. process-buffer subscriber (RabbitMQ consumer)
+   └─► Verifica se agente está pausado (seller takeover ativo)
+   └─► Faz flush do buffer (todas as mensagens concatenadas)
+   └─► Chama AgentService
+
+4. AgentService (LangChain + DeepSeek v3.2 via OpenRouter)
+   ├─► Carrega histórico de conversa do Redis (até 200 mensagens)
+   ├─► Sanitiza input contra prompt injection
+   ├─► Monta system prompt dinâmico com personalidade do vendedor
+   └─► Ferramentas disponíveis:
+       ├─► rag-search       → busca vetorial no Pinecone (namespace empresa + vendedor)
+       ├─► think            → reflexão interna antes de responder
+       ├─► classify-lead    → classifica temperatura e etapa do funil
+       ├─► check-availability → consulta agenda do vendedor (Google Calendar)
+       └─► schedule-meeting  → agenda reunião no Google Meet
+
+5. Resposta ao WhatsApp (via Evolution API)
+   ├─► URL de mídia detectada (jpg/png/mp4/pdf…) → sendMedia
+   └─► Texto → dividido por \n---\n, enviado parte a parte
+                com delay proporcional ao tamanho (50ms/char, máx 10s)
 ```
 
-O agente de IA usa busca vetorial (Pinecone) para consultar documentos da empresa e do vendedor, construindo respostas personalizadas com base na personalidade configurada para cada vendedor.
+### Seller Takeover
+
+Quando o próprio vendedor envia uma mensagem pelo WhatsApp, o agente é automaticamente pausado por 2 horas, evitando que responda enquanto o vendedor está assumindo a conversa manualmente.
+
+### Personalidade do Vendedor
+
+Cada vendedor tem traços configuráveis (formalidade, humor, empatia, estilo de comunicação, abordagem de vendas) que moldam dinamicamente o system prompt — fazendo cada instância se comportar de forma diferente.
+
+### Modelo de Dados
+
+```
+Company
+ └─► Sellers (1 instância Evolution API por vendedor)
+      └─► Leads
+```
+
+- **Company**: namespace Pinecone para conhecimento geral da empresa
+- **Seller**: namespace Pinecone próprio, configurações de personalidade e instância Evolution
+- **Pinecone**: índice `salesbud-sdr`, namespaces separados por company e seller
