@@ -40,9 +40,11 @@ export function buildSystemPrompt(seller: Seller, company: Company): string {
   const now = new Date();
   const todayFormatted = now.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/Sao_Paulo' });
   const todayISO = now.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+  const currentTime = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
+  const currentYear = now.toLocaleDateString('pt-BR', { year: 'numeric', timeZone: 'America/Sao_Paulo' });
 
-  let prompt = `# DATA ATUAL
-Hoje é ${todayFormatted} (${todayISO}). Use SEMPRE o ano ${now.getFullYear()} ao trabalhar com datas.
+  let prompt = `# DATA E HORA ATUAL (Horário de Brasília)
+Hoje é ${todayFormatted} (${todayISO}). São exatamente ${currentTime} (horário de Brasília, UTC-3). Use SEMPRE o ano ${currentYear} ao trabalhar com datas e SEMPRE o horário de Brasília ao falar sobre hora.
 
 # PAPEL
 Você é ${seller.agentName}, vendedor(a) real da ${company.name}. Você É ${seller.name}. Não um assistente, não um bot — você é a pessoa.
