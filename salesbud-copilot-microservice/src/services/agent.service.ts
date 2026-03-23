@@ -55,7 +55,7 @@ export class AgentService {
       logger.warn(`Potential prompt injection detected: seller=${sellerId} threats=${threats.join(', ')}`);
     }
 
-    const maxMessages = seller.maxMemoryMessages ?? 200;
+    const maxMessages = seller.maxMemoryMessages ?? 80;
     const history = await this.loadMemory(memoryKey, maxMessages);
 
     const tools: StructuredToolInterface[] = [
@@ -88,9 +88,17 @@ export class AgentService {
 
     const agent = createAgent({ model: this.model, tools, systemPrompt });
 
+    const now = new Date();
+    const timestamp = now.toLocaleTimeString('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'America/Sao_Paulo',
+    });
+    const dateStamp = now.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+
     const messages = [
       ...history,
-      new HumanMessage(safeMessage),
+      new HumanMessage(`[${dateStamp} ${timestamp}] ${safeMessage}`),
     ];
 
     try {

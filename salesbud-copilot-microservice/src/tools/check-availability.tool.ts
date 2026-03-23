@@ -18,7 +18,7 @@ export function createCheckAvailabilityTool(
   return new DynamicStructuredTool({
     name: 'check_availability',
     description:
-      `Verifica a disponibilidade na agenda do vendedor. Use ANTES de sugerir ou confirmar qualquer horário de reunião. Retorna os horários ocupados e se o período solicitado está livre. A data de HOJE é ${today}. IMPORTANTE: Reuniões só podem ser agendadas em horário comercial (9h-17h) e com pelo menos 8 horas de antecedência.`,
+      `Verifica a disponibilidade na agenda do vendedor. Use ANTES de sugerir ou confirmar qualquer horário de reunião. Retorna os horários ocupados e se o período solicitado está livre. A data de HOJE é ${today}. IMPORTANTE: Reuniões só podem ser agendadas em horário comercial (9h-17h), com pelo menos 8 horas de antecedência e com intervalo mínimo de 30 minutos entre reuniões.`,
     schema: z.object({
       date: z.string().describe(`Data para verificar no formato YYYY-MM-DD. Hoje é ${today}. Use o ano correto (${new Date().getFullYear()}).`),
       start_time: z
@@ -28,8 +28,8 @@ export function createCheckAvailabilityTool(
       buffer_minutes: z
         .number()
         .optional()
-        .default(15)
-        .describe('Minutos de folga antes e depois do horário (padrão: 15)'),
+        .default(30)
+        .describe('Minutos de folga antes e depois do horário (padrão: 30)'),
     }),
     func: async ({ date, start_time, end_time, buffer_minutes }) => {
       try {
@@ -76,7 +76,7 @@ export function createCheckAvailabilityTool(
           })
           .join('\n');
 
-        return `Horário JÁ OCUPADO — já existe compromisso(s) agendado(s) neste período:\n${busyInfo}\n\nIsso NÃO é um erro técnico. O horário está reservado. Informe o cliente que esse horário já está ocupado e sugira 2-3 horários alternativos dentro do horário comercial (9h-17h) com pelo menos ${MIN_LEAD_TIME_HOURS}h de antecedência.`;
+        return `Horário JÁ OCUPADO — já existe compromisso(s) agendado(s) neste período ou dentro do intervalo mínimo de 30 minutos:\n${busyInfo}\n\nIsso NÃO é um erro técnico. O horário está reservado ou muito próximo de outro compromisso. Informe o cliente que esse horário já está ocupado e sugira 2-3 horários alternativos dentro do horário comercial (9h-17h) com pelo menos ${MIN_LEAD_TIME_HOURS}h de antecedência e 30min de intervalo entre reuniões.`;
       } catch (error: any) {
         if (error instanceof CalendarAuthError) {
           return 'O vendedor precisa conectar a conta Google no painel. Não é possível verificar a agenda no momento.';

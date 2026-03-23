@@ -29,7 +29,7 @@ export function createScheduleMeetingTool(
   return new DynamicStructuredTool({
     name: 'schedule_meeting',
     description:
-      `Agenda uma reunião com link do Google Meet no calendário do vendedor. SEMPRE use check_availability antes para verificar se o horário está livre. Cria automaticamente um link do Google Meet para a reunião. A data de HOJE é ${todayFormatted}. IMPORTANTE: Reuniões só podem ser agendadas em horário comercial (9h-17h) e com pelo menos 8 horas de antecedência.`,
+      `Agenda uma reunião com link do Google Meet no calendário do vendedor. SEMPRE use check_availability antes para verificar se o horário está livre. Cria automaticamente um link do Google Meet para a reunião. A data de HOJE é ${todayFormatted}. IMPORTANTE: Reuniões só podem ser agendadas em horário comercial (9h-17h), com pelo menos 8 horas de antecedência e intervalo mínimo de 30 minutos entre reuniões.`,
     schema: z.object({
       date: z.string().describe(`Data da reunião no formato YYYY-MM-DD. Hoje é ${todayFormatted}. Use o ano correto (${currentYear}).`),
       start_time: z

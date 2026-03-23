@@ -203,7 +203,7 @@ export class CalendarService {
     busy: BusySlot[];
     available: boolean;
   }> {
-    const { clerkUserId, timeMin, timeMax, timezone, bufferMinutes = 15 } = params;
+    const { clerkUserId, timeMin, timeMax, timezone, bufferMinutes = 30 } = params;
     const token = await this.getGoogleAccessToken(clerkUserId);
 
     const bufferedMin = new Date(
@@ -226,11 +226,12 @@ export class CalendarService {
 
     const requestedStart = new Date(timeMin).getTime();
     const requestedEnd = new Date(timeMax).getTime();
+    const bufferMs = bufferMinutes * 60_000;
 
     const hasOverlap = busySlots.some((slot) => {
       const slotStart = new Date(slot.start).getTime();
       const slotEnd = new Date(slot.end).getTime();
-      return slotStart < requestedEnd && slotEnd > requestedStart;
+      return slotStart < (requestedEnd + bufferMs) && slotEnd > (requestedStart - bufferMs);
     });
 
     return { busy: busySlots, available: !hasOverlap };
@@ -249,7 +250,7 @@ export class CalendarService {
       endDateTime,
       timezone,
       attendeeEmail,
-      bufferMinutes = 15,
+      bufferMinutes = 30,
     } = params;
 
     // 1. Idempotency check
