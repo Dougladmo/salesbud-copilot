@@ -222,7 +222,27 @@ O agente responderá automaticamente simulando o vendedor padrão do seed.
 
 ---
 
-## 6. Lint e Build
+## 6. Testes
+
+```bash
+cd salesbud-copilot-microservice
+
+npm test             # Rodar todos os testes uma vez
+npm run test:watch   # Rodar em modo watch (re-executa ao salvar)
+npm run test:cov     # Rodar com relatório de cobertura
+```
+
+Os testes cobrem:
+
+| Módulo | O que testa |
+|--------|-------------|
+| `CalendarService` | Buffer de 30min entre reuniões, detecção de overlap, custom buffer |
+| `check_availability` tool | Validação de horário comercial, antecedência mínima, conflitos, erros |
+| `schedule_meeting` tool | Agendamento com Meet, atualização de status do lead, conflitos, fallback |
+
+---
+
+## 7. Lint e Build
 
 ### Backend
 

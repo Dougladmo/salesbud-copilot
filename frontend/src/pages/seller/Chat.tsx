@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, RefreshCw, UserRound, Send, Loader2, MessageSquare } from 'lucide-react';
+import { Search, RefreshCw, UserRound, Send, Loader2, MessageSquare, ArrowLeft, X, Menu } from 'lucide-react';
 import { chat, type EvolutionChat, type ChatMessage } from '../../api/client';
 import { useSeller } from '../../context/SellerContext';
 import { LeadPanel } from '../../components/chat/LeadPanel';
@@ -15,6 +15,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { useSidebar } from '@/components/ui/sidebar';
 
 function extractText(msg: ChatMessage): string {
   const m = msg.message;
@@ -88,9 +89,11 @@ function getInitial(name: string): string {
 
 export default function ChatPage() {
   const { seller } = useSeller();
+  const { toggleSidebar, isMobile: isSidebarMobile } = useSidebar();
   const [chats, setChats] = useState<EvolutionChat[]>([]);
   const [selectedJid, setSelectedJid] = useState<string | null>(null);
   const [showLeadPanel, setShowLeadPanel] = useState(true);
+  const [mobileShowChat, setMobileShowChat] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [loadingChats, setLoadingChats] = useState(true);
@@ -192,6 +195,15 @@ export default function ChatPage() {
     }
   }
 
+  function handleSelectChat(jid: string) {
+    setSelectedJid(jid);
+    setMobileShowChat(true);
+  }
+
+  function handleMobileBack() {
+    setMobileShowChat(false);
+  }
+
   const selectedChat = chats.find((c) => c.remoteJid === selectedJid);
 
   const filteredChats = chats.filter((c) => {
@@ -216,11 +228,22 @@ export default function ChatPage() {
   });
 
   return (
-    <div className="flex h-screen bg-muted overflow-hidden">
+    <div className="flex h-dvh bg-muted overflow-hidden">
       {/* Sidebar - Contact list */}
-      <div className="w-80 bg-card border-r border-border flex flex-col shrink-0">
-        <div className="p-4 border-b border-border">
-          <h2 className="text-base font-semibold text-foreground mb-3">Conversas</h2>
+      <div className={cn(
+        'bg-card border-r border-border flex flex-col shrink-0',
+        'w-full md:w-64 lg:w-80',
+        mobileShowChat && 'hidden md:flex'
+      )}>
+        <div className="p-3 md:p-4 border-b border-border">
+          <div className="flex items-center gap-2 mb-3">
+            {isSidebarMobile && (
+              <Button variant="ghost" size="icon" className="size-8 shrink-0" onClick={toggleSidebar}>
+                <Menu className="size-4" />
+              </Button>
+            )}
+            <h2 className="text-base font-semibold text-foreground">Conversas</h2>
+          </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
@@ -264,9 +287,9 @@ export default function ChatPage() {
               return (
                 <button
                   key={c.remoteJid}
-                  onClick={() => setSelectedJid(c.remoteJid)}
+                  onClick={() => handleSelectChat(c.remoteJid)}
                   className={cn(
-                    'w-full flex items-center gap-3 px-4 py-3 text-left transition-colors cursor-pointer border-none',
+                    'w-full flex items-center gap-3 px-3 md:px-4 py-3 text-left transition-colors cursor-pointer border-none',
                     isSelected
                       ? 'bg-pink/10'
                       : 'hover:bg-muted bg-transparent'
@@ -302,7 +325,10 @@ export default function ChatPage() {
       </div>
 
       {/* Main chat area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className={cn(
+        'flex-1 flex flex-col min-w-0',
+        !mobileShowChat && 'hidden md:flex'
+      )}>
         {!selectedJid || !selectedChat ? (
           <div className="flex-1 flex items-center justify-center bg-muted">
             <div className="text-center">
@@ -315,14 +341,22 @@ export default function ChatPage() {
         ) : (
           <>
             {/* Chat header */}
-            <div className="h-16 bg-card border-b border-border flex items-center px-5 gap-3 shrink-0">
-              <Avatar className="size-9">
+            <div className="h-14 md:h-16 bg-card border-b border-border flex items-center px-3 md:px-5 gap-2 md:gap-3 shrink-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleMobileBack}
+                className="md:hidden shrink-0 size-8"
+              >
+                <ArrowLeft className="size-4" />
+              </Button>
+              <Avatar className="size-8 md:size-9 shrink-0">
                 <AvatarImage src={selectedChat.profilePicUrl ?? undefined} alt="" />
-                <AvatarFallback className="bg-pink text-white text-sm font-bold">
+                <AvatarFallback className="bg-pink text-white text-xs md:text-sm font-bold">
                   {getInitial(getContactName(selectedChat))}
                 </AvatarFallback>
               </Avatar>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-foreground truncate">
                   {getContactName(selectedChat)}
                 </p>
@@ -330,12 +364,13 @@ export default function ChatPage() {
                   {formatJid(selectedChat.remoteJid)}
                 </p>
               </div>
-              <div className="ml-auto flex items-center gap-1">
+              <div className="ml-auto flex items-center gap-0.5 md:gap-1">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
+                      className="size-8 md:size-9"
                       onClick={() => loadMessages(selectedJid)}
                     >
                       <RefreshCw className="size-4" />
@@ -348,8 +383,8 @@ export default function ChatPage() {
                     <Button
                       variant="ghost"
                       size="icon"
+                      className={cn('size-8 md:size-9', showLeadPanel && 'bg-pink/10 text-pink')}
                       onClick={() => setShowLeadPanel(!showLeadPanel)}
-                      className={cn(showLeadPanel && 'bg-pink/10 text-pink')}
                     >
                       <UserRound className="size-4" />
                     </Button>
@@ -364,7 +399,7 @@ export default function ChatPage() {
             {/* Messages area */}
             <div
               ref={messagesContainerRef}
-              className="flex-1 overflow-y-auto px-5 py-4"
+              className="flex-1 overflow-y-auto px-3 md:px-5 py-3 md:py-4"
               style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23e2e6ed\' fill-opacity=\'0.3\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")' }}
             >
               {loadingMessages ? (
@@ -395,7 +430,7 @@ export default function ChatPage() {
                           >
                             <div
                               className={cn(
-                                'max-w-[70%] px-3 py-2 rounded-xl text-sm leading-relaxed shadow-sm',
+                                'max-w-[85%] md:max-w-[70%] px-3 py-2 rounded-xl text-sm leading-relaxed shadow-sm',
                                 fromMe
                                   ? 'bg-pink text-white rounded-br-sm'
                                   : 'bg-white text-foreground rounded-bl-sm border border-border'
@@ -422,13 +457,13 @@ export default function ChatPage() {
             </div>
 
             {/* Input area */}
-            <div className="bg-card border-t border-border px-4 py-3 shrink-0">
+            <div className="bg-card border-t border-border px-3 md:px-4 py-2 md:py-3 shrink-0">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   handleSend();
                 }}
-                className="flex items-center gap-3"
+                className="flex items-center gap-2 md:gap-3"
               >
                 <Input
                   ref={inputRef}
@@ -457,16 +492,36 @@ export default function ChatPage() {
         )}
       </div>
 
-      {/* Lead CRM Panel */}
+      {/* Lead CRM Panel - Desktop: inline, Mobile/Tablet: overlay */}
       {selectedJid && seller && showLeadPanel && (
-        <div className="w-80 bg-card border-l border-border flex flex-col shrink-0 overflow-hidden">
-          <div className="px-4 py-3 border-b border-border">
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Lead CRM</h3>
+        <>
+          {/* Mobile/Tablet overlay backdrop */}
+          <div
+            className="fixed inset-0 bg-black/40 z-40 lg:hidden"
+            onClick={() => { setShowLeadPanel(false);}}
+          />
+          <div className={cn(
+            'bg-card border-l border-border flex flex-col overflow-hidden',
+            'fixed right-0 top-0 h-full w-[85%] max-w-80 z-50 shadow-xl',
+            'lg:static lg:w-80 lg:shadow-none lg:z-auto lg:shrink-0',
+            'animate-slide-in-right lg:animate-none'
+          )}>
+            <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Lead CRM</h3>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7 lg:hidden"
+                onClick={() => { setShowLeadPanel(false);}}
+              >
+                <X className="size-4" />
+              </Button>
+            </div>
+            <ScrollArea className="flex-1">
+              <LeadPanel sellerId={seller.id} remoteJid={selectedJid} />
+            </ScrollArea>
           </div>
-          <ScrollArea className="flex-1">
-            <LeadPanel sellerId={seller.id} remoteJid={selectedJid} />
-          </ScrollArea>
-        </div>
+        </>
       )}
     </div>
   );

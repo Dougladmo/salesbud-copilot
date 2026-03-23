@@ -1,9 +1,26 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import { useOrganization } from '@clerk/clerk-react';
+import { Menu } from 'lucide-react';
 import { useSeller } from '../context/SellerContext';
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarInset, useSidebar } from '@/components/ui/sidebar';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 import AppSidebar from './app-sidebar';
+
+function MobileHeader() {
+  const { toggleSidebar, isMobile } = useSidebar();
+  if (!isMobile) return null;
+  return (
+    <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card">
+      <Button variant="ghost" size="icon" className="size-8" onClick={toggleSidebar}>
+        <Menu className="size-5" />
+      </Button>
+      <span className="text-base font-bold text-foreground tracking-tight">
+        Sales<span className="text-pink">bud</span>
+      </span>
+    </div>
+  );
+}
 
 export default function SellerLayout() {
   const { seller, loading } = useSeller();
@@ -32,7 +49,8 @@ export default function SellerLayout() {
         isAdmin={isAdmin}
       />
       <SidebarInset>
-        <main className={isChatPage ? 'h-screen' : 'p-8 w-full max-w-5xl mx-auto'}>
+        {!isChatPage && <MobileHeader />}
+        <main className={isChatPage ? 'h-dvh' : 'p-4 md:p-8 w-full max-w-5xl mx-auto'}>
           <Outlet />
         </main>
       </SidebarInset>
