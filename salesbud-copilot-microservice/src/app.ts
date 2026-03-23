@@ -9,7 +9,7 @@ import { webhookRoutes } from './routes/webhook.route.js';
 const app = express();
 
 // Evolution API webhook — must come BEFORE clerkMiddleware (no auth needed)
-app.use(express.json());
+app.use(express.json({ limit: '5mb' }));
 app.use('/webhook', webhookRoutes);
 
 app.use(clerkMiddleware());

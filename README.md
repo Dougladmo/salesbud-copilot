@@ -13,8 +13,10 @@ Um copiloto inteligente para vendedores que automatiza o atendimento via WhatsAp
 - Atende alto volume de leads simultaneamente
 - Personalidade configurável por vendedor
 - Base de conhecimento própria (RAG/Pinecone)
+- Transcreve áudios do WhatsApp automaticamente (Whisper via OpenRouter)
+- Descreve imagens recebidas (GPT-4o via OpenRouter)
 
-> Backend em Express 5 + TypeScript. Frontend em React 19 + Vite. IA com DeepSeek v3.2 via OpenRouter e LangChain.
+> Backend em Express 5 + TypeScript. Frontend em React 19 + Vite. IA com DeepSeek v3.2 via OpenRouter e LangChain. Autenticação com Clerk.
 
 ## Pré-requisitos
 
@@ -22,6 +24,7 @@ Um copiloto inteligente para vendedores que automatiza o atendimento via WhatsAp
 - **Docker** e **Docker Compose**
 - **npm**
 - **ngrok** (para receber webhooks do WhatsApp em ambiente local)
+- **Conta no Clerk** (autenticação e OAuth Google Calendar)
 
 ## Estrutura do Projeto
 
@@ -146,6 +149,14 @@ CLERK_WEBHOOK_SIGNING_SECRET=sua_chave_aqui
 
 # Webhook (URL do ngrok)
 WEBHOOK_BASE_URL=https://abcd1234.ngrok-free.app
+
+# Evolution API — nome da instância PoC
+EVOLUTION_INSTANCE_NAME=salesbud_poc
+
+# Seed (opcional — cria dados iniciais para PoC)
+DEFAULT_COMPANY_ID=uuid_da_empresa_aqui
+SEED_SELLER_CLERK_USER_ID=clerk_user_id_do_vendedor
+SEED_ADMIN_CLERK_USER_ID=clerk_user_id_do_admin
 ```
 
 ### Instalar dependências e rodar
@@ -167,7 +178,7 @@ npm install
 npm run dev
 ```
 
-O frontend estará disponível em `http://localhost:5173` e faz proxy automático das chamadas `/api/*` para o backend na porta 3000.
+O frontend estará disponível em `http://localhost:5173` e faz proxy automático das chamadas `/api/*` para o backend na porta 3000 (rewrite remove o prefixo `/api`).
 
 ---
 
@@ -271,29 +282,35 @@ npm run build     # Build de produção (tsc + vite build)
    └─► Evolution API (1 instância por vendedor)
         └─► POST /webhook/:sellerId
 
-2. MessageBufferService
+2. Webhook Controller
+   ├─► Detecta fromMe=true → pausa agente por 2h (seller takeover)
+   ├─► audioMessage → transcreve via Whisper-1 (OpenRouter)
+   ├─► imageMessage → descreve via GPT-4o (OpenRouter) + caption
+   └─► Faz upsert do Lead (cria/atualiza por remoteJid)
+
+3. MessageBufferService
    └─► Acumula mensagens no Redis por chave (sellerId + remoteJid)
    └─► Reinicia timer a cada nova mensagem (padrão: 5s)
         └─► Ao disparar → publica job na fila RabbitMQ
 
-3. process-buffer subscriber (RabbitMQ consumer)
+4. process-buffer subscriber (RabbitMQ consumer)
    └─► Verifica se agente está pausado (seller takeover ativo)
    └─► Faz flush do buffer (todas as mensagens concatenadas)
    └─► Chama AgentService
 
-4. AgentService (LangChain + DeepSeek v3.2 via OpenRouter)
-   ├─► Carrega histórico de conversa do Redis (até 200 mensagens)
+5. AgentService (LangChain createAgent + DeepSeek v3.2 via OpenRouter)
+   ├─► Carrega histórico de conversa do Redis (configurável por vendedor, padrão runtime 80 msgs)
    ├─► Sanitiza input contra prompt injection
    ├─► Monta system prompt dinâmico com personalidade do vendedor
    └─► Ferramentas disponíveis:
        ├─► rag-search       → busca vetorial no Pinecone (namespace empresa + vendedor)
-       ├─► think            → reflexão interna antes de responder
+       ├─► think            → reflexão interna (framework SPIN Selling)
        ├─► classify-lead    → classifica temperatura e etapa do funil
-       ├─► check-availability → consulta agenda do vendedor (Google Calendar)
-       └─► schedule-meeting  → agenda reunião no Google Meet
+       ├─► check-availability → consulta agenda do vendedor (Google Calendar via Clerk OAuth)
+       └─► schedule-meeting  → agenda reunião no Google Meet (com lock distribuído e retry)
 
-5. Resposta ao WhatsApp (via Evolution API)
-   ├─► URL de mídia detectada (jpg/png/mp4/pdf…) → sendMedia
+6. Resposta ao WhatsApp (via Evolution API)
+   ├─► URL de mídia detectada (jpg/jpeg/png/gif/mp4/pdf/doc/docx) → sendMedia
    └─► Texto → dividido por \n---\n, enviado parte a parte
                 com delay proporcional ao tamanho (50ms/char, máx 10s)
 ```

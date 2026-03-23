@@ -95,6 +95,28 @@ export class EvolutionService {
     }
   }
 
+  async getBase64FromMedia(instanceName: string, messageKey: { id: string; remoteJid: string; fromMe: boolean }): Promise<string> {
+    const url = `${this.baseUrl}/chat/getBase64FromMediaMessage/${instanceName}`;
+    try {
+      const { data } = await axios.post(url, { message: { key: messageKey } }, { headers: this.headers });
+      return data.base64;
+    } catch (error) {
+      logger.error(`Failed to get base64 from media for ${instanceName}: ${error}`);
+      throw error;
+    }
+  }
+
+  async restartInstance(instanceName: string): Promise<void> {
+    const url = `${this.baseUrl}/instance/restart/${instanceName}`;
+    try {
+      await axios.put(url, {}, { headers: this.headers });
+      logger.info(`Evolution instance restarted: ${instanceName}`);
+    } catch (error) {
+      logger.error(`Failed to restart Evolution instance ${instanceName}: ${error}`);
+      throw error;
+    }
+  }
+
   async deleteInstance(instanceName: string): Promise<void> {
     const url = `${this.baseUrl}/instance/delete/${instanceName}`;
     try {

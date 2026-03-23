@@ -3,6 +3,7 @@ import { container } from 'tsyringe';
 import { SellerService } from '../services/seller.service.js';
 import { LeadService } from '../services/lead.service.js';
 import { TranscriptionService } from '../services/transcription.service.js';
+import { EvolutionService } from '../services/evolution.service.js';
 import { MessageBufferService } from '../services/message-buffer.service.js';
 import { logger } from '../config/logger.js';
 import { param } from '../utils/catch-async.js';
@@ -12,6 +13,7 @@ export const webhookController = {
   async handle(req: Request, res: Response) {
     const sellerId = param(req, 'sellerId');
     const payload = req.body as EvolutionPayload;
+    const instanceName = (payload as any).instance as string | undefined;
 
     logger.info({ payload: JSON.stringify(payload).slice(0, 500) }, `Webhook received for seller=${sellerId}`);
 
@@ -33,6 +35,7 @@ export const webhookController = {
     const sellerService = container.resolve(SellerService);
     const leadService = container.resolve(LeadService);
     const transcriptionService = container.resolve(TranscriptionService);
+    const evolutionService = container.resolve(EvolutionService);
     const messageBufferService = container.resolve(MessageBufferService);
 
     const seller = await sellerService.findOne(sellerId);
@@ -43,6 +46,7 @@ export const webhookController = {
     }
 
     const { remoteJid } = data.key;
+    const evInstanceName = seller.evolutionInstanceName || instanceName;
 
     let text: string | null = null;
 
@@ -53,22 +57,47 @@ export const webhookController = {
       case 'extendedTextMessage':
         text = data.message?.extendedTextMessage?.text || null;
         break;
-      case 'audioMessage':
-        if (data.message?.audioMessage?.url) {
-          text = await transcriptionService.transcribeAudio(data.message.audioMessage.url);
+      case 'audioMessage': {
+        try {
+          const audio = data.message?.audioMessage;
+          let base64 = audio?.base64;
+          if (!base64 && evInstanceName) {
+            base64 = await evolutionService.getBase64FromMedia(evInstanceName, {
+              id: data.key.id,
+              remoteJid: data.key.remoteJid,
+              fromMe: data.key.fromMe,
+            });
+          }
+          if (base64) {
+            text = await transcriptionService.transcribeAudio(base64, audio?.mimetype);
+          }
+        } catch (error: any) {
+          logger.error(`Failed to process audio: ${error.message}`);
         }
         break;
-      case 'imageMessage':
-        if (data.message?.imageMessage?.url) {
-          const description = await transcriptionService.describeImage(
-            data.message.imageMessage.url,
-          );
-          const caption = data.message.imageMessage.caption;
-          text = caption
-            ? `${caption}\n[Imagem: ${description}]`
-            : `[Imagem: ${description}]`;
+      }
+      case 'imageMessage': {
+        try {
+          const img = data.message?.imageMessage;
+          let base64 = img?.base64;
+          if (!base64 && evInstanceName) {
+            base64 = await evolutionService.getBase64FromMedia(evInstanceName, {
+              id: data.key.id,
+              remoteJid: data.key.remoteJid,
+              fromMe: data.key.fromMe,
+            });
+          }
+          if (base64) {
+            const description = await transcriptionService.describeImage(base64, img?.mimetype);
+            text = img?.caption
+              ? `${img.caption}\n[Imagem: ${description}]`
+              : `[Imagem: ${description}]`;
+          }
+        } catch (error: any) {
+          logger.error(`Failed to process image: ${error.message}`);
         }
         break;
+      }
       default:
         logger.warn(`Unhandled message type: ${data.messageType}`);
         res.json({ status: 'unsupported_type' });

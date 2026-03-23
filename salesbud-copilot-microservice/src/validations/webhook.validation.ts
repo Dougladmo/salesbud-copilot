@@ -13,6 +13,7 @@ export const evolutionPayloadSchema = z.object({
       imageMessage: z
         .object({
           url: z.string().optional(),
+          base64: z.string().optional(),
           caption: z.string().optional(),
           mimetype: z.string().optional(),
         })
@@ -20,18 +21,21 @@ export const evolutionPayloadSchema = z.object({
       audioMessage: z
         .object({
           url: z.string().optional(),
+          base64: z.string().optional(),
           mimetype: z.string().optional(),
         })
         .optional(),
       videoMessage: z
         .object({
           url: z.string().optional(),
+          base64: z.string().optional(),
           caption: z.string().optional(),
         })
         .optional(),
       documentMessage: z
         .object({
           url: z.string().optional(),
+          base64: z.string().optional(),
           fileName: z.string().optional(),
         })
         .optional(),
