@@ -227,7 +227,7 @@ Isso é apenas para fins de demonstração (PoC), permitindo testar o sistema se
 
 Com tudo configurado e rodando (infra Docker + backend + Evolution API conectada), o agente já está pronto para responder. Basta enviar uma mensagem para o número de demonstração:
 
-**[Enviar mensagem no WhatsApp → +55 (91) 98194-1219](https://wa.me/5591981941219)**
+**[Enviar mensagem no WhatsApp → +55 91 98032-4872](https://wa.me/5591980324872)**
 
 O agente responderá automaticamente simulando o vendedor padrão do seed.
 
