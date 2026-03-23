@@ -4,6 +4,10 @@ import type { CalendarService } from '../services/calendar.service.js';
 import { CalendarAuthError } from '../utils/calendar-errors.js';
 import { logger } from '../config/logger.js';
 
+const MIN_LEAD_TIME_HOURS = 8;
+const BUSINESS_HOUR_START = 9;
+const BUSINESS_HOUR_END = 17;
+
 export function createCheckAvailabilityTool(
   calendarService: CalendarService,
   clerkUserId: string,
@@ -14,13 +18,13 @@ export function createCheckAvailabilityTool(
   return new DynamicStructuredTool({
     name: 'check_availability',
     description:
-      `Verifica a disponibilidade na agenda do vendedor. Use ANTES de sugerir ou confirmar qualquer horário de reunião. Retorna os horários ocupados e se o período solicitado está livre. A data de HOJE é ${today}.`,
+      `Verifica a disponibilidade na agenda do vendedor. Use ANTES de sugerir ou confirmar qualquer horário de reunião. Retorna os horários ocupados e se o período solicitado está livre. A data de HOJE é ${today}. IMPORTANTE: Reuniões só podem ser agendadas em horário comercial (9h-17h) e com pelo menos 8 horas de antecedência.`,
     schema: z.object({
       date: z.string().describe(`Data para verificar no formato YYYY-MM-DD. Hoje é ${today}. Use o ano correto (${new Date().getFullYear()}).`),
       start_time: z
         .string()
-        .describe('Hora de início no formato HH:mm (24h)'),
-      end_time: z.string().describe('Hora de fim no formato HH:mm (24h)'),
+        .describe('Hora de início no formato HH:mm (24h). Deve ser entre 09:00 e 17:00.'),
+      end_time: z.string().describe('Hora de fim no formato HH:mm (24h). Deve ser entre 09:00 e 17:00.'),
       buffer_minutes: z
         .number()
         .optional()
@@ -32,6 +36,14 @@ export function createCheckAvailabilityTool(
         // Validate date is not in the past
         const dateValidation = validateDate(date, timezone);
         if (dateValidation) return dateValidation;
+
+        // Validate business hours
+        const businessHoursValidation = validateBusinessHours(start_time, end_time);
+        if (businessHoursValidation) return businessHoursValidation;
+
+        // Validate minimum lead time
+        const leadTimeValidation = validateMinLeadTime(date, start_time, timezone);
+        if (leadTimeValidation) return leadTimeValidation;
 
         const timeMin = toISODateTime(date, start_time, timezone);
         const timeMax = toISODateTime(date, end_time, timezone);
@@ -64,7 +76,7 @@ export function createCheckAvailabilityTool(
           })
           .join('\n');
 
-        return `Horário indisponível. Compromissos encontrados:\n${busyInfo}\n\nSugira um horário alternativo ao cliente.`;
+        return `Horário JÁ OCUPADO — já existe compromisso(s) agendado(s) neste período:\n${busyInfo}\n\nIsso NÃO é um erro técnico. O horário está reservado. Informe o cliente que esse horário já está ocupado e sugira 2-3 horários alternativos dentro do horário comercial (9h-17h) com pelo menos ${MIN_LEAD_TIME_HOURS}h de antecedência.`;
       } catch (error: any) {
         if (error instanceof CalendarAuthError) {
           return 'O vendedor precisa conectar a conta Google no painel. Não é possível verificar a agenda no momento.';
@@ -77,9 +89,38 @@ export function createCheckAvailabilityTool(
 }
 
 function validateDate(date: string, timezone: string): string | null {
-  const today = new Date().toLocaleDateString('pt-BR', { timeZone: timezone });
-  if (date < today) {
-    return `Data inválida: ${date} é no passado. Hoje é ${today}. Use uma data futura com o ano correto (${new Date().getFullYear()}).`;
+  const todayFormatted = new Date().toLocaleDateString('pt-BR', { timeZone: timezone });
+  const todayISO = toDateISO(timezone);
+  if (date < todayISO) {
+    return `Data inválida: ${date} é no passado. Hoje é ${todayFormatted}. Use uma data futura com o ano correto (${new Date().getFullYear()}).`;
+  }
+  return null;
+}
+
+function toDateISO(timezone: string): string {
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
+  return parts; // returns YYYY-MM-DD
+}
+
+function validateBusinessHours(startTime: string, endTime: string): string | null {
+  const [startH] = startTime.split(':').map(Number);
+  const [endH, endM] = endTime.split(':').map(Number);
+
+  if (startH < BUSINESS_HOUR_START || endH > BUSINESS_HOUR_END || (endH === BUSINESS_HOUR_END && endM > 0)) {
+    return `Horário fora do expediente comercial. Reuniões só podem ser agendadas entre ${BUSINESS_HOUR_START}h e ${BUSINESS_HOUR_END}h. Informe o cliente e sugira um horário dentro desse período.`;
+  }
+  return null;
+}
+
+function validateMinLeadTime(date: string, startTime: string, timezone: string): string | null {
+  const meetingDate = new Date(`${date}T${startTime}:00`);
+  const now = new Date();
+  const diffMs = meetingDate.getTime() - now.getTime();
+  const diffHours = diffMs / (1000 * 60 * 60);
+
+  if (diffHours < MIN_LEAD_TIME_HOURS) {
+    return `Antecedência insuficiente. Reuniões precisam ser agendadas com pelo menos ${MIN_LEAD_TIME_HOURS} horas de antecedência para que o vendedor tenha tempo de ver e se preparar. Informe o cliente e sugira um horário mais adiante.`;
   }
   return null;
 }

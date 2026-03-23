@@ -18,7 +18,11 @@ import {
 
 function extractText(msg: ChatMessage): string {
   const m = msg.message;
-  if (!m) return '';
+  if (!m) {
+    // Received messages with no content stored: show placeholder so they render
+    if (!msg.key.fromMe) return `[${msg.messageType ?? 'mensagem'}]`;
+    return '';
+  }
   if (m.conversation) return m.conversation;
   if (m.extendedTextMessage?.text) return m.extendedTextMessage.text;
   if (m.imageMessage?.caption) return `[Imagem] ${m.imageMessage.caption}`;
@@ -394,7 +398,7 @@ export default function ChatPage() {
                                 'max-w-[70%] px-3 py-2 rounded-xl text-sm leading-relaxed shadow-sm',
                                 fromMe
                                   ? 'bg-pink text-white rounded-br-sm'
-                                  : 'bg-card text-foreground rounded-bl-sm'
+                                  : 'bg-white text-foreground rounded-bl-sm border border-border'
                               )}
                             >
                               <p className="whitespace-pre-wrap break-words">{text}</p>

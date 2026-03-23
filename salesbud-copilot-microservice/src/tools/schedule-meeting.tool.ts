@@ -10,6 +10,10 @@ import {
 import { LeadStatus } from '../models/lead.model.js';
 import { logger } from '../config/logger.js';
 
+const MIN_LEAD_TIME_HOURS = 8;
+const BUSINESS_HOUR_START = 9;
+const BUSINESS_HOUR_END = 17;
+
 export function createScheduleMeetingTool(
   calendarService: CalendarService,
   leadService: LeadService,
@@ -18,19 +22,20 @@ export function createScheduleMeetingTool(
   contactJid: string,
   timezone: string,
 ) {
-  const today = new Date().toLocaleDateString('pt-BR', { timeZone: timezone });
+  const todayFormatted = new Date().toLocaleDateString('pt-BR', { timeZone: timezone });
+  const todayISO = toDateISO(timezone);
   const currentYear = new Date().getFullYear();
 
   return new DynamicStructuredTool({
     name: 'schedule_meeting',
     description:
-      `Agenda uma reunião com link do Google Meet no calendário do vendedor. SEMPRE use check_availability antes para verificar se o horário está livre. Cria automaticamente um link do Google Meet para a reunião. A data de HOJE é ${today}.`,
+      `Agenda uma reunião com link do Google Meet no calendário do vendedor. SEMPRE use check_availability antes para verificar se o horário está livre. Cria automaticamente um link do Google Meet para a reunião. A data de HOJE é ${todayFormatted}. IMPORTANTE: Reuniões só podem ser agendadas em horário comercial (9h-17h) e com pelo menos 8 horas de antecedência.`,
     schema: z.object({
-      date: z.string().describe(`Data da reunião no formato YYYY-MM-DD. Hoje é ${today}. Use o ano correto (${currentYear}).`),
+      date: z.string().describe(`Data da reunião no formato YYYY-MM-DD. Hoje é ${todayFormatted}. Use o ano correto (${currentYear}).`),
       start_time: z
         .string()
-        .describe('Hora de início no formato HH:mm (24h)'),
-      end_time: z.string().describe('Hora de fim no formato HH:mm (24h)'),
+        .describe('Hora de início no formato HH:mm (24h). Deve ser entre 09:00 e 17:00.'),
+      end_time: z.string().describe('Hora de fim no formato HH:mm (24h). Deve ser entre 09:00 e 17:00.'),
       summary: z
         .string()
         .describe(
@@ -55,9 +60,17 @@ export function createScheduleMeetingTool(
       attendee_email,
     }) => {
       // Validate date is not in the past
-      if (date < today) {
-        return `Data inválida: ${date} é no passado. Hoje é ${today}. Use uma data futura com o ano correto (${currentYear}).`;
+      if (date < todayISO) {
+        return `Data inválida: ${date} é no passado. Hoje é ${todayFormatted}. Use uma data futura com o ano correto (${currentYear}).`;
       }
+
+      // Validate business hours
+      const businessHoursValidation = validateBusinessHours(start_time, end_time);
+      if (businessHoursValidation) return businessHoursValidation;
+
+      // Validate minimum lead time
+      const leadTimeValidation = validateMinLeadTime(date, start_time);
+      if (leadTimeValidation) return leadTimeValidation;
 
       const startDateTime = toISODateTime(date, start_time, timezone);
       const endDateTime = toISODateTime(date, end_time, timezone);
@@ -130,6 +143,33 @@ export function createScheduleMeetingTool(
       }
     },
   });
+}
+
+function toDateISO(timezone: string): string {
+  const now = new Date();
+  return new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
+}
+
+function validateBusinessHours(startTime: string, endTime: string): string | null {
+  const [startH] = startTime.split(':').map(Number);
+  const [endH, endM] = endTime.split(':').map(Number);
+
+  if (startH < BUSINESS_HOUR_START || endH > BUSINESS_HOUR_END || (endH === BUSINESS_HOUR_END && endM > 0)) {
+    return `Horário fora do expediente comercial. Reuniões só podem ser agendadas entre ${BUSINESS_HOUR_START}h e ${BUSINESS_HOUR_END}h. Informe o cliente e sugira um horário dentro desse período.`;
+  }
+  return null;
+}
+
+function validateMinLeadTime(date: string, startTime: string): string | null {
+  const meetingDate = new Date(`${date}T${startTime}:00`);
+  const now = new Date();
+  const diffMs = meetingDate.getTime() - now.getTime();
+  const diffHours = diffMs / (1000 * 60 * 60);
+
+  if (diffHours < MIN_LEAD_TIME_HOURS) {
+    return `Antecedência insuficiente. Reuniões precisam ser agendadas com pelo menos ${MIN_LEAD_TIME_HOURS} horas de antecedência para que o vendedor tenha tempo de ver e se preparar. Informe o cliente e sugira um horário mais adiante.`;
+  }
+  return null;
 }
 
 function toISODateTime(
