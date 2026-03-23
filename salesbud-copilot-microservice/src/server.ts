@@ -7,6 +7,7 @@ import { connectRabbitMQ, consumeQueue } from './config/rabbitmq.js';
 import { handleProcessBuffer } from './subscribers/process-buffer.subscriber.js';
 import { container } from './container.js';
 import { CalendarService } from './services/calendar.service.js';
+import { MessageBufferService } from './services/message-buffer.service.js';
 
 const PENDING_RETRY_INTERVAL_MS = 2 * 60_000; // 2 minutes
 
@@ -18,6 +19,10 @@ async function bootstrap() {
 
   await connectRabbitMQ();
   await consumeQueue(handleProcessBuffer);
+
+  // Recover any buffered messages that were pending before restart
+  const bufferService = container.resolve(MessageBufferService);
+  await bufferService.recoverOrphanedBuffers();
 
   // Periodic retry of failed calendar schedules
   const calendarService = container.resolve(CalendarService);

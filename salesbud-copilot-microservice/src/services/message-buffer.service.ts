@@ -60,4 +60,29 @@ export class MessageBufferService {
     if (err) throw err;
     return (messages as string[]) || [];
   }
+
+  async recoverOrphanedBuffers(): Promise<void> {
+    const keys = await redis.keys('buf:*');
+    if (keys.length === 0) return;
+
+    logger.info(`Recovering ${keys.length} orphaned buffer(s) after restart`);
+
+    for (const key of keys) {
+      // key format: buf:{sellerId}:{remoteJid}
+      const parts = key.replace('buf:', '').split(':');
+      if (parts.length < 2) continue;
+
+      const sellerId = parts[0];
+      const remoteJid = parts.slice(1).join(':');
+
+      const messageCount = await redis.llen(key);
+      if (messageCount === 0) {
+        await redis.del(key);
+        continue;
+      }
+
+      logger.info(`Publishing orphaned buffer: seller=${sellerId} jid=${remoteJid} messages=${messageCount}`);
+      await publishToQueue({ sellerId, remoteJid });
+    }
+  }
 }
